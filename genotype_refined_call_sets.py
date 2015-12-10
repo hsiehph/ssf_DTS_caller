@@ -17,7 +17,6 @@ import info_io
 import pdb
 from GC_data import GC_data
 
-
 def get_min_max(cc):
     mn = 9e9
     mx = -1
@@ -129,7 +128,6 @@ if __name__=='__main__':
                          o.singleton_min_sigma,
                          o.dup_min_sigma,
                          filter_X_linked = o.filter_X_linked)
-     
     for overlapping_call_clusts in callset_clust.get_overlapping_call_clusts(o.total_subsets, o.subset):
         mn, mx = get_min_max(overlapping_call_clusts)
            
@@ -151,7 +149,7 @@ if __name__=='__main__':
         k+=1
 
         if k%1==0: 
-            print "".join("*" for q in xrange(50))
+            print "*" * 50
             print "%d genotypes evaluated..."%k
         
         if len(overlapping_call_clusts) == 1 or o.simplify_complex_eval:

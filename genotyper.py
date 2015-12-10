@@ -702,10 +702,11 @@ class GMM_gt(object):
         self.f_correct = None 
         
         self.shaped_mus = np.reshape(self.mus, (self.mus.shape[0],1))
-        self.l_probs, self.posterior_probs = gmm.eval(self.shaped_mus)
+
+        #Deprecated in sklearn 0.14, removed in 0.16
+        #self.l_probs, self.posterior_probs = gmm.eval(self.shaped_mus)
         
-        #only in sklearn 0.14.1
-        #self.score_samples = gmm.score_samples(X)
+        self.l_probs, self.posterior_probs = gmm.score_samples(self.shaped_mus)
         
         #unique labels are the unique labels and uniq mus are the 
         #mean of the self.mus for each label
@@ -1315,10 +1316,11 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
 
     if g.is_segdup(contig, s, e) or np.mean(mus)>=3 or np.amax(mus) >2.5:
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
-        gXs = g.GMM_genotype(Xs)
-        if gXs.n_clusts == 1:
-            print "***********1_SD_CLUST************"
-            return
+        if Xs.size > 0:
+            gXs = g.GMM_genotype(Xs)
+            if gXs.n_clusts == 1:
+                print "***********1_SD_CLUST************"
+                return
             
     if gX.n_clusts == 1 or gX.fail_filter(filt):
         return
@@ -1330,8 +1332,9 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
     if plot:
         print "plotting %s %d %d"%(contig, s, e)
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
-        gXs = g.GMM_genotype(Xs, include_indivs = include_indivs)
-        g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, overlaps, fn="%s/%s_%d_%d.png"%(plot_dir, contig, s, e))
+        if Xs.size != 0:
+            gXs = g.GMM_genotype(Xs, include_indivs = include_indivs)
+            g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, overlaps, fn="%s/%s_%d_%d.png"%(plot_dir, contig, s, e))
 
 
 class genotyper(object):
