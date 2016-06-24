@@ -3,3 +3,4 @@
 *.swp
 *.o
 build/
+c_hierarchical_edge_merge.cpp

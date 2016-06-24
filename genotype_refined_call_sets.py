@@ -1,8 +1,6 @@
 from optparse import OptionParser
 from collections import defaultdict
 
-from fastahack import FastaHack
-
 import numpy as np
 from sys import stderr
 import pandas as pd
@@ -12,9 +10,7 @@ import time
 import cluster
 from get_windowed_variance import get_windowed_variance
 import genotyper as gt
-import IPython
 import info_io
-import pdb
 from GC_data import GC_data
 
 def get_min_max(cc):
