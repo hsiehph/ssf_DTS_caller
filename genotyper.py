@@ -15,8 +15,6 @@ from sklearn import cluster
 from sklearn import metrics
 from sklearn import mixture
 
-from fastahack import FastaHack
-
 from sets import Set
 
 import math
@@ -1558,9 +1556,6 @@ class genotyper(object):
         t = time.time()
         print >>stderr, "done (%fs)"%(time.time()-t)
         
-        if fn_fasta:
-            self.fasta = FastaHack(fn_fasta)
-       
     def addGMM(self, gmm, ax, X, labels, overlaps=None):
         
         G_x=np.arange(0,max(X)+1,.1)
