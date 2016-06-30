@@ -2,6 +2,7 @@ import glob
 from sys import stderr
 from sys import stdout
 import numpy as np
+import pysam
 
 import time
 import matplotlib.pyplot as plt
@@ -1431,7 +1432,7 @@ class genotyper(object):
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
-                                   REF="N",
+                                   REF=self.fasta.fetch(region=contig, start=s),
                                    ALT=ALTS,
                                    QUAL='.',
                                    INFO=INFO,
@@ -1550,7 +1551,9 @@ class genotyper(object):
         else:
             kwargs['contig'] = contig
             self.init_on_indiv_DTS_files(**kwargs)
-    
+
+        if fn_fasta is not None:
+            self.fasta = pysam.FastaFile(fn_fasta)
         k = self.cp_matrix.shape[0]
         print >>stderr, "loading %d genomes..."%(k)
         t = time.time()
