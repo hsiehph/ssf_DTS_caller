@@ -1431,7 +1431,7 @@ class genotyper(object):
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
-                                   REF=self.fasta['%s:%d'%(VCF_contig,s+1)],
+                                   REF="N",
                                    ALT=ALTS,
                                    QUAL='.',
                                    INFO=INFO,
