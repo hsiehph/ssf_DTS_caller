@@ -1432,7 +1432,7 @@ class genotyper(object):
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
-                                   REF=self.fasta.fetch(region=contig.replace("chr", ""), start=s),
+                                   REF=self.fasta.fetch(contig.replace("chr", ""), s, s+1),
                                    ALT=ALTS,
                                    QUAL='.',
                                    INFO=INFO,
