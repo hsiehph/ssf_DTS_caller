@@ -43,15 +43,15 @@ VCF_HEADER = """##fileformat=VCFv4.2
 ##reference=GRCh37
 ##source=dCGH
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
-##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">
 ##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">
 ##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">
 ##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">
 ##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Hemizygous Genotype (Placeholder)\">
 ##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy number based on GMM classification\">
-##FORMAT=<ID=GL,Number=G,Type=String,Description=\"Genotype likelihood\">
-##FORMAT=<ID=PL,Number=G,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
+##FORMAT=<ID=GL,Number=.,Type=String,Description=\"Genotype likelihood\">
+##FORMAT=<ID=PL,Number=.,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
 
 
 class call:
