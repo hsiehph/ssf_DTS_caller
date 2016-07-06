@@ -39,6 +39,21 @@ import pysam
 
 import info_io
 
+VCF_HEADER = """##fileformat=VCFv4.2
+##source=dCGH
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
+##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">
+##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">
+##INFO=<ID=POS,Number=2,Type=String,Description=\"POS and END\">
+##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">
+##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">
+##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
+##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Hemizygous Genotype (Placeholder)\">
+##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy number based on GMM classification\">
+##FORMAT=<ID=GL,Number=G,Type=String,Description=\"Genotype likelihood\">
+##FORMAT=<ID=PL,Number=G,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
+
+
 class call:
 
     def __init__(self, chr, start, end, X, labels, s):
@@ -1351,6 +1366,7 @@ class genotyper(object):
         self.F_SUNK_GT.write(outstr)
         
         VCF_outstr = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n"%("\t".join(self.indivs))
+        self.F_VCF.write(VCF_HEADER)
         self.F_VCF.write(VCF_outstr)
         
 
@@ -1428,7 +1444,7 @@ class genotyper(object):
         else:
             SVTYPE="CNV"
         
-        INFO="END=%d;SVTYPE=%s;LPROBS=%.2f"%(e, SVTYPE ,np.sum(gX.l_probs))
+        INFO="END=%d;CIPOS=-100,0;CIEND=0,100;SVTYPE=%s;LPROBS=%.2f"%(e, SVTYPE ,np.sum(gX.l_probs))
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
@@ -1466,11 +1482,10 @@ class genotyper(object):
                         
                 sGLs = ",".join(["%.2f"%l for l in GLs])
                 sPLs = ",".join(["%d"%l for l in PLs])
-                strout="{GT}:{COPY}:{GLs}:{PLs}:{CNL}".format(GT=GT,
+                strout="{GT}:{COPY}:{GLs}:{PLs}".format(GT=GT,
                                                               COPY=COPY,
                                                               GLs = sGLs,
-                                                              PLs=sPLs,
-                                                              CNL=s_CNL)
+                                                              PLs=sPLs)
                 V_data.append(strout)
             else:
                 ordered_cps.append(-1)
