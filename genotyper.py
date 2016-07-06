@@ -39,7 +39,7 @@ import pysam
 
 import info_io
 
-VCF_HEADER = """##fileformat=VCFv4.2
+VCF_HEADER = """##fileformat=VCFv4.3
 ##reference=GRCh37
 ##source=dCGH
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
@@ -50,6 +50,7 @@ VCF_HEADER = """##fileformat=VCFv4.2
 ##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Hemizygous Genotype (Placeholder)\">
 ##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy number based on GMM classification\">
+##FORMAT=<ID=CNL,Number=G,Type=Float,Description=\"Copy number likelihood for imprecise events\">
 ##FORMAT=<ID=GL,Number=.,Type=String,Description=\"Genotype likelihood\">
 ##FORMAT=<ID=PL,Number=.,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
 
@@ -1456,7 +1457,7 @@ class genotyper(object):
                                    QUAL='.',
                                    INFO=INFO,
                                    FILTER="PASS",
-                                   FORMAT="GT:CN:GL:PL")
+                                   FORMAT="GT:CN:GL:PL:CNL")
         
         V_data = []
         ordered_cps = []
@@ -1485,10 +1486,11 @@ class genotyper(object):
                         
                 sGLs = ",".join(["%.2f"%l for l in GLs])
                 sPLs = ",".join(["%d"%l for l in PLs])
-                strout="{GT}:{COPY}:{GLs}:{PLs}".format(GT=GT,
+                strout="{GT}:{COPY}:{GLs}:{PLs}:{CNLs}".format(GT=GT,
                                                               COPY=COPY,
                                                               GLs = sGLs,
-                                                              PLs=sPLs)
+                                                              PLs=sPLs,
+                                                              CNLS=s_CNL)
                 V_data.append(strout)
             else:
                 ordered_cps.append(-1)
