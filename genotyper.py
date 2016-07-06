@@ -39,7 +39,7 @@ import pysam
 
 import info_io
 
-VCF_HEADER = """##fileformat=VCFv4.3
+VCF_HEADER = """##fileformat=VCFv4.2
 ##reference=GRCh37
 ##source=dCGH
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
