@@ -1490,7 +1490,7 @@ class genotyper(object):
                                                               COPY=COPY,
                                                               GLs = sGLs,
                                                               PLs=sPLs,
-                                                              CNLS=s_CNL)
+                                                              CNLs=s_CNL)
                 V_data.append(strout)
             else:
                 ordered_cps.append(-1)
