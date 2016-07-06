@@ -40,11 +40,11 @@ import pysam
 import info_io
 
 VCF_HEADER = """##fileformat=VCFv4.2
+##reference=GRCh37
 ##source=dCGH
 ##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
 ##INFO=<ID=SVLEN,Number=1,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">
 ##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">
-##INFO=<ID=POS,Number=2,Type=String,Description=\"POS and END\">
 ##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">
 ##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">
 ##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
@@ -1426,11 +1426,11 @@ class genotyper(object):
 
         """
         VCF OUTPUT
-        GT:CN:CNL:GL:PL
+        GT:CN:GL:PL
+        GT = genotype
         CN = copy number
-        CNP = Copy Number likelihood
-
-        #PL.. phred scaled genotype likelihood...? MAYBE?
+        GL = genotype likelihood
+        PL = Phred-scaled GL
         """
         V_outstr = "{CHROM}\t{POS}\t{ID}\t{REF}\t{ALT}\t{QUAL}\t{FILTER}\t{INFO}\t{FORMAT}"
         ALTS = ",".join(["<CN%d>"%c for c in hap_cns if c!=1])
@@ -1444,7 +1444,10 @@ class genotyper(object):
         else:
             SVTYPE="CNV"
         
-        INFO="END=%d;CIPOS=-100,0;CIEND=0,100;SVTYPE=%s;LPROBS=%.2f"%(e, SVTYPE ,np.sum(gX.l_probs))
+        svlen = e - s - 1
+        SVLEN = ",".join([str(svlen) if c != 0 else str(-svlen) for c in hap_cns if c != 1])
+
+        INFO = "END=%d;CIPOS=-100,0;CIEND=0,100;SVLEN=%s;SVTYPE=%s;LPROBS=%.2f" % (e, SVLEN, SVTYPE, np.sum(gX.l_probs))
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
@@ -1453,7 +1456,7 @@ class genotyper(object):
                                    QUAL='.',
                                    INFO=INFO,
                                    FILTER="PASS",
-                                   FORMAT="GT:CN:GL:PL:CNL")
+                                   FORMAT="GT:CN:GL:PL")
         
         V_data = []
         ordered_cps = []
