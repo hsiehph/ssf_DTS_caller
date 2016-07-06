@@ -50,7 +50,7 @@ VCF_HEADER = """##fileformat=VCFv4.3
 ##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
 ##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Hemizygous Genotype (Placeholder)\">
 ##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy number based on GMM classification\">
-##FORMAT=<ID=CNL,Number=G,Type=Float,Description=\"Copy number likelihood for imprecise events\">
+##FORMAT=<ID=CNL,Number=.,Type=Float,Description=\"Copy number likelihood for imprecise events\">
 ##FORMAT=<ID=GL,Number=.,Type=String,Description=\"Genotype likelihood\">
 ##FORMAT=<ID=PL,Number=.,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
 
@@ -1465,7 +1465,7 @@ class genotyper(object):
             if indiv in gts_by_indiv:
                 ordered_cps.append(gts_by_indiv[indiv])
                 
-                s_CNL=",".join(["%.2f"%(cn not in cns and -1000 or gt_lls_by_indiv[indiv][cn]) for cn in cn_range])
+                s_CNL=",".join(["%.2f"%(cn not in cns and -1000 or gt_lls_by_indiv[indiv][cn]) for cn in cn_range if cn != 2])
                 s_GLs = ""
                 COPY=gts_by_indiv[indiv]
                 GT = cps_to_GTs[COPY][0]
