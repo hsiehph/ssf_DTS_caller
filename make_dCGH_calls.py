@@ -7,7 +7,7 @@ import Bio.Statistics.lowess as biostats
 import ml_get_cpn as ml_methods
 
 from wssd_pw_common import *
-from kitz_wssd.wssd_common_v2 import *
+import wssd_common_v2
 from math import *
 from sys import stderr
 
