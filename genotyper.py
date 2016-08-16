@@ -16,10 +16,7 @@ from sklearn import cluster
 from sklearn import metrics
 from sklearn import mixture
 
-from sets import Set
-
 import math
-import random
 from scipy.stats import norm
 from scipy.stats import fisher_exact
 
@@ -33,11 +30,7 @@ import cluster as m_cluster
 from sets import Set
 from scipy.stats.mstats import mode
 
-import IPython
-import pdb
 import pysam
-
-import info_io
 
 VCF_HEADER = """##fileformat=VCFv4.2
 ##reference=GRCh37
@@ -53,7 +46,6 @@ VCF_HEADER = """##fileformat=VCFv4.2
 ##FORMAT=<ID=CNL,Number=.,Type=Float,Description=\"Copy number likelihood for imprecise events\">
 ##FORMAT=<ID=GL,Number=.,Type=String,Description=\"Genotype likelihood\">
 ##FORMAT=<ID=PL,Number=.,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
-
 
 class call:
 
@@ -1591,7 +1583,7 @@ class genotyper(object):
             #if not i in u_labels: continue
             c = cm.hsv(float(i)/l,1)
             mu = gmm.means[i,0]
-            var = gmm.covars[i][0][0]
+            var = gmm.covars[i]
 
             print mu, var, var**.5
             all_mus.append(mu)
@@ -1649,7 +1641,7 @@ class genotyper(object):
         cps = np.mean(X, 1)
         sunk_cps = np.mean(Xs, 1)
         
-        plt.rc('grid',color='0.75',linestyle='l',linewidth='0.1')
+        plt.rc('grid',color='0.75',linestyle='-',linewidth='0.1')
         fig, axarr = plt.subplots(3, 3)
         fig.set_figwidth(11)
         fig.set_figheight(8.5)
@@ -1776,7 +1768,6 @@ class genotyper(object):
         #covars = np.array([np.reshape(np.array([max(v, min_covar)]),(1,1)) for v in init_vars])
         covars = np.array([max(v, min_covar) for v in init_vars])
         gmm.covars = covars
-        
         #gmm.fit(X, n_iter=n_iter, init_params='c')
         #gmm.fit(X, n_iter=n_iter, init_params='cmw')
         #gmm.fit(X, n_iter=n_iter, init_params='c')
