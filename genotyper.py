@@ -2,6 +2,7 @@ import glob
 from sys import stderr
 from sys import stdout
 import numpy as np
+import pysam
 
 import time
 import matplotlib.pyplot as plt
@@ -15,12 +16,7 @@ from sklearn import cluster
 from sklearn import metrics
 from sklearn import mixture
 
-from fastahack import FastaHack
-
-from sets import Set
-
 import math
-import random
 from scipy.stats import norm
 from scipy.stats import fisher_exact
 
@@ -34,11 +30,22 @@ import cluster as m_cluster
 from sets import Set
 from scipy.stats.mstats import mode
 
-import IPython
-import pdb
 import pysam
 
-import info_io
+VCF_HEADER = """##fileformat=VCFv4.2
+##reference=GRCh37
+##source=dCGH
+##INFO=<ID=SVTYPE,Number=1,Type=String,Description=\"Type of structural variant\">
+##INFO=<ID=SVLEN,Number=A,Type=Integer,Description=\"Difference in length between REF and ALT alleles\">
+##INFO=<ID=END,Number=1,Type=Integer,Description=\"End position of the variant described in this record\">
+##INFO=<ID=CIPOS,Number=2,Type=Integer,Description=\"Confidence interval around POS for imprecise variants\">
+##INFO=<ID=CIEND,Number=2,Type=Integer,Description=\"Confidence interval around END for imprecise variants\">
+##INFO=<ID=LPROBS,Number=1,Type=Float,Description=\"Likelihood score of call\">
+##FORMAT=<ID=GT,Number=1,Type=String,Description=\"Hemizygous Genotype (Placeholder)\">
+##FORMAT=<ID=CN,Number=1,Type=Integer,Description=\"Copy number based on GMM classification\">
+##FORMAT=<ID=CNL,Number=.,Type=Float,Description=\"Copy number likelihood for imprecise events\">
+##FORMAT=<ID=GL,Number=.,Type=String,Description=\"Genotype likelihood\">
+##FORMAT=<ID=PL,Number=.,Type=String,Description=\"Phred-scaled genotype likelihood\">\n"""
 
 class call:
 
@@ -1352,6 +1359,7 @@ class genotyper(object):
         self.F_SUNK_GT.write(outstr)
         
         VCF_outstr = "#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s\n"%("\t".join(self.indivs))
+        self.F_VCF.write(VCF_HEADER)
         self.F_VCF.write(VCF_outstr)
         
 
@@ -1411,11 +1419,11 @@ class genotyper(object):
 
         """
         VCF OUTPUT
-        GT:CN:CNL:GL:PL
+        GT:CN:GL:PL
+        GT = genotype
         CN = copy number
-        CNP = Copy Number likelihood
-
-        #PL.. phred scaled genotype likelihood...? MAYBE?
+        GL = genotype likelihood
+        PL = Phred-scaled GL
         """
         V_outstr = "{CHROM}\t{POS}\t{ID}\t{REF}\t{ALT}\t{QUAL}\t{FILTER}\t{INFO}\t{FORMAT}"
         ALTS = ",".join(["<CN%d>"%c for c in hap_cns if c!=1])
@@ -1429,11 +1437,14 @@ class genotyper(object):
         else:
             SVTYPE="CNV"
         
-        INFO="END=%d;SVTYPE=%s;LPROBS=%.2f"%(e, SVTYPE ,np.sum(gX.l_probs))
+        svlen = e - s - 1
+        SVLEN = ",".join([str(svlen) if c != 0 else str(-svlen) for c in hap_cns if c != 1])
+
+        INFO = "END=%d;CIPOS=-100,0;CIEND=0,100;SVLEN=%s;SVTYPE=%s;LPROBS=%.2f" % (e, SVLEN, SVTYPE, np.sum(gX.l_probs))
         V_outstr = V_outstr.format(CHROM=VCF_contig,
                                    POS=s+1,
                                    ID="%s_%d_%d"%(contig, s+1, e),
-                                   REF=self.fasta['%s:%d'%(VCF_contig,s+1)],
+                                   REF=self.fasta.fetch(contig.replace("chr", ""), s, s+1),
                                    ALT=ALTS,
                                    QUAL='.',
                                    INFO=INFO,
@@ -1446,7 +1457,7 @@ class genotyper(object):
             if indiv in gts_by_indiv:
                 ordered_cps.append(gts_by_indiv[indiv])
                 
-                s_CNL=",".join(["%.2f"%(cn not in cns and -1000 or gt_lls_by_indiv[indiv][cn]) for cn in cn_range])
+                s_CNL=",".join(["%.2f"%(cn not in cns and -1000 or gt_lls_by_indiv[indiv][cn]) for cn in cn_range if cn != 2])
                 s_GLs = ""
                 COPY=gts_by_indiv[indiv]
                 GT = cps_to_GTs[COPY][0]
@@ -1467,11 +1478,11 @@ class genotyper(object):
                         
                 sGLs = ",".join(["%.2f"%l for l in GLs])
                 sPLs = ",".join(["%d"%l for l in PLs])
-                strout="{GT}:{COPY}:{GLs}:{PLs}:{CNL}".format(GT=GT,
+                strout="{GT}:{COPY}:{GLs}:{PLs}:{CNLs}".format(GT=GT,
                                                               COPY=COPY,
                                                               GLs = sGLs,
                                                               PLs=sPLs,
-                                                              CNL=s_CNL)
+                                                              CNLs=s_CNL)
                 V_data.append(strout)
             else:
                 ordered_cps.append(-1)
@@ -1552,15 +1563,14 @@ class genotyper(object):
         else:
             kwargs['contig'] = contig
             self.init_on_indiv_DTS_files(**kwargs)
-    
+
+        if fn_fasta is not None:
+            self.fasta = pysam.FastaFile(fn_fasta)
         k = self.cp_matrix.shape[0]
         print >>stderr, "loading %d genomes..."%(k)
         t = time.time()
         print >>stderr, "done (%fs)"%(time.time()-t)
         
-        if fn_fasta:
-            self.fasta = FastaHack(fn_fasta)
-       
     def addGMM(self, gmm, ax, X, labels, overlaps=None):
         
         G_x=np.arange(0,max(X)+1,.1)
@@ -1573,7 +1583,7 @@ class genotyper(object):
             #if not i in u_labels: continue
             c = cm.hsv(float(i)/l,1)
             mu = gmm.means[i,0]
-            var = gmm.covars[i][0][0]
+            var = gmm.covars[i]
 
             print mu, var, var**.5
             all_mus.append(mu)
@@ -1631,7 +1641,7 @@ class genotyper(object):
         cps = np.mean(X, 1)
         sunk_cps = np.mean(Xs, 1)
         
-        plt.rc('grid',color='0.75',linestyle='l',linewidth='0.1')
+        plt.rc('grid',color='0.75',linestyle='-',linewidth='0.1')
         fig, axarr = plt.subplots(3, 3)
         fig.set_figwidth(11)
         fig.set_figheight(8.5)
@@ -1758,7 +1768,6 @@ class genotyper(object):
         #covars = np.array([np.reshape(np.array([max(v, min_covar)]),(1,1)) for v in init_vars])
         covars = np.array([max(v, min_covar) for v in init_vars])
         gmm.covars = covars
-        
         #gmm.fit(X, n_iter=n_iter, init_params='c')
         #gmm.fit(X, n_iter=n_iter, init_params='cmw')
         #gmm.fit(X, n_iter=n_iter, init_params='c')

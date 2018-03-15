@@ -8,6 +8,7 @@ from wnd_cp_data import wnd_cp_indiv
 import time
 import numpy as np
 import pandas as pd
+import tables
 
 class gglob:
     """
@@ -123,27 +124,7 @@ class gglob:
         keys = ["wnd_starts","wnd_ends","cp_matrix","sunk_wnd_starts","sunk_wnd_ends","sunk_cp_matrix"]
         fn_in = "%s/%s"%(gglob_dir,contig)
 
-        mats_by_key = {} 
-        for k in keys:
-            stderr.write("loading %s..."%k)
-            stderr.flush()
-            t=time.time()
-            if not os.path.exists("%s.%s.h5"%(fn_in,k)):
-                raise Exception("""path "%s.%s.h5" does not exist!"""%(fn_in,k))
-
-            df = pd.read_hdf("%s.%s.h5"%(fn_in,k),k)
-            mats_by_key[k] = df.as_matrix()
-            stderr.write("done (%fs)\n"%(time.time()-t))
-
-        wnd_starts = mats_by_key['wnd_starts'][:,0]
-        wnd_ends = mats_by_key['wnd_ends'][:,0]
-        cp_matrix = mats_by_key['cp_matrix']
-        
-        sunk_wnd_starts = mats_by_key['sunk_wnd_starts'][:,0]
-        sunk_wnd_ends = mats_by_key['sunk_wnd_ends'][:,0]
-        sunk_cp_matrix = mats_by_key['sunk_cp_matrix']
-        
-        if indiv_subset!=None:
+        if indiv_subset is not None:
             new_indivs = []
             new_indivs_idxs = []
             i=0
@@ -155,10 +136,40 @@ class gglob:
             l = len(new_indivs)
             new_indivs_idxs = np.array(new_indivs_idxs)
             
-            cp_matrix = cp_matrix[new_indivs_idxs,:]  
+            #cp_matrix = cp_matrix[new_indivs_idxs,:]  
             
-            sunk_cp_matrix = sunk_cp_matrix[new_indivs_idxs,:] 
+            #sunk_cp_matrix = sunk_cp_matrix[new_indivs_idxs,:] 
             indivs = new_indivs
+
+        else: 
+            new_indivs_idxs = range(len(indivs))
+
+        mats_by_key = {} 
+        for k in keys:
+            stderr.write("loading %s..."%k)
+            stderr.flush()
+            t=time.time()
+            if not os.path.exists("%s.%s.h5"%(fn_in,k)):
+                raise Exception("""path "%s.%s.h5" does not exist!"""%(fn_in,k))
+
+            if k in ['cp_matrix', 'sunk_cp_matrix']:
+                fh = tables.open_file("%s.%s.h5"%(fn_in,k), 'r')
+                mat = fh.get_node('/%s/block0_values' % k)[new_indivs_idxs, :]
+                fh.close()
+            else:
+                mat = pd.read_hdf("%s.%s.h5"%(fn_in,k),k).as_matrix()
+
+            mats_by_key[k] = mat
+            stderr.write("done (%fs)\n"%(time.time()-t))
+
+        wnd_starts = mats_by_key['wnd_starts'][:,0]
+        wnd_ends = mats_by_key['wnd_ends'][:,0]
+        cp_matrix = mats_by_key['cp_matrix']
+        
+        sunk_wnd_starts = mats_by_key['sunk_wnd_starts'][:,0]
+        sunk_wnd_ends = mats_by_key['sunk_wnd_ends'][:,0]
+        sunk_cp_matrix = mats_by_key['sunk_cp_matrix']
+        
         
         #for i,indiv in enumerate(indivs):
         #    print indiv, np.mean(cp_matrix[i]), np.median(cp_matrix[i])

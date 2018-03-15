@@ -1,0 +1,8 @@
+*.pyc
+*.so
+*.swp
+*.o
+build/
+get_windowed_variance.c
+traverse_contours.c
+c_hierarchical_edge_merge.cpp

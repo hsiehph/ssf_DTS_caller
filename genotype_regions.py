@@ -10,7 +10,6 @@ from wnd_cp_data import wnd_cp_indiv
 import json
 import pandas as pd
 import numpy as np
-import pdb
 
 def get_regions(regions_file, supported_contigs):
     '''Load regions by chromosome with starts and ends for each region in
