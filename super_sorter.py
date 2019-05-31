@@ -8,8 +8,8 @@ import time
 import numpy as np
 import pandas as pd
 
-from wnd_cp_data import wnd_cp_indiv
-from gglob import gglob
+from .wnd_cp_data import wnd_cp_indiv
+from .gglob import gglob
         
 
 class comparator:
@@ -23,14 +23,14 @@ class comparator:
         self.indivs_by_group['group1'] = group1
         self.indivs_by_group['group2'] = group2
 
-        for group, indivs in self.indivs_by_group.iteritems():
+        for group, indivs in self.indivs_by_group.items():
             idxs = []
             for indiv in indivs:
                 idx = self.all_indivs.index(indiv)
                 idxs.append(idx)
             self.index_by_group[group] = np.array(sorted(idxs))
             
-            print group, self.index_by_group[group]
+            print(group, self.index_by_group[group])
     
     def get_adjacent_wnds(self, poses):
 
@@ -182,7 +182,7 @@ if __name__=="__main__":
     comp = comparator(indivs, indivs1, indivs2)
     
     #contigs = ['chr%d'%d for d in xrange(22,23)]
-    contigs = ['chr%d'%d for d in xrange(1,23)]
+    contigs = ['chr%d'%d for d in range(1,23)]
     
     #dups is dels too 
     if o.t_g1_dup:
@@ -207,7 +207,7 @@ if __name__=="__main__":
 
     for contig in contigs:   
         #if contig != "chr20": continue
-        print >>stderr, contig
+        print(contig, file=stderr)
         
         g = gglob.init_from_DTS(DTS_dir = o.DTS_dir,
                                 DTS_prefix = o.DTS_prefix,

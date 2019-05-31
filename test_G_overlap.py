@@ -22,7 +22,7 @@ def pw_GMM_overlap(self, gmm):
     weights = weights[order]
     vars = vars[order]
     
-    for i in xrange(mus.shape[0]-1):
+    for i in range(mus.shape[0]-1):
         mu1 = mus[i]
         mu2 = mus[i+1]
         v1 = vars[i]
@@ -61,7 +61,7 @@ def get_intersection(G1, G2, ws, tol=0.01):
     uj, vj = Gs[1]
     si, sj = np.sqrt(vi), np.sqrt(vj)
     al, be = ws
-    print ui, si, uj, sj
+    print(ui, si, uj, sj)
     
     if si == sj:
         x=(ui+uj)/2.0
@@ -104,7 +104,7 @@ def plot_G(ax, Gs, weights, intersect):
     G_x=np.arange(0,5,.001)
     l = len(Gs)
     G_ys = []
-    for i in xrange(l):
+    for i in range(l):
         c = cm.hsv(float(i)/l,1)
         mu = Gs[i][0]
         var = Gs[i][1]
@@ -146,7 +146,7 @@ if __name__=="__main__":
     weights = [0.98735838860058134,1-0.98735838860058134]
     
     ix,iy, fi, fj = get_intersection(Gs[0], Gs[1], weights, tol=0.001)
-    print ix, iy, fi, fj
+    print(ix, iy, fi, fj)
 
     plot_G(axarr[0], Gs, weights, [ix,iy])   
     #axarr[0].set_xlim(0,.1)

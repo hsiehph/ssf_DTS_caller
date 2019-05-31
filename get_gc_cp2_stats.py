@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 import pysam
 
-
 from wnd_cp_data import wnd_cp_indiv
 from gglob import gglob
 from wssd_pw_common import *
@@ -41,7 +40,7 @@ class GC_info:
 
         self.cps=np.around(self.cps) 
         d=100.0
-        for i in xrange(1,100):
+        for i in range(1,100):
             lower=(i-1)/d
             upper=(i)/d
             
@@ -49,9 +48,9 @@ class GC_info:
             l = max(w[0].shape[0],1)
             n_cp2 = np.sum(self.cps[w]==2)
             if fn_out:
-                print >>F, lower, n_cp2, l, float(n_cp2)/l 
+                print(lower, n_cp2, l, float(n_cp2)/l, file=F) 
             else:
-                print lower, n_cp2, l, float(n_cp2)/l 
+                print(lower, n_cp2, l, float(n_cp2)/l) 
     
 if __name__=="__main__":
         
@@ -91,7 +90,7 @@ if __name__=="__main__":
         if not contig in tbx_cp2.contigs: continue
         #if not contig in ["chr20"]: continue
         
-        print  >>stderr, contig
+        print(contig, file=stderr)
         
         cps = wnd_cp.get_cps_by_chr(contig)
         wnd_starts, wnd_ends = wnd_cp.get_wnds_by_chr(contig)

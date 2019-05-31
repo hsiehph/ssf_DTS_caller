@@ -6,7 +6,7 @@ import argparse
 from collections import OrderedDict
 import csv
 import os
-from wnd_cp_data import wnd_cp_indiv
+from .wnd_cp_data import wnd_cp_indiv
 import json
 import pandas as pd
 import numpy as np
@@ -52,7 +52,7 @@ def genotype_gglob_regions(gglob_dir, regions_file, contigs, window, sunk):
     Get copy number for each individual in each region in the gglob dir for WSSD or SUNK.
     """
     if contigs is None:
-        supported_contigs = ['chr' + str(x) for x in range(1,23) + ['X', 'Y']]
+        supported_contigs = ['chr' + str(x) for x in list(range(1,23)) + ['X', 'Y']]
     else:
         with open(contigs, 'r') as fh:
             supported_contigs = set([line.strip().split('\t')[0] for line in fh])
@@ -72,13 +72,13 @@ def genotype_gglob_regions(gglob_dir, regions_file, contigs, window, sunk):
 
     sunk_string = 'sunk_' if sunk else ''
 
-    for chromosome, regions in regions_by_chromosome.iteritems():
+    for chromosome, regions in regions_by_chromosome.items():
         cp_matrix = pd.read_hdf('%s/%s.%s%s.h5' % (gglob_dir, chromosome, sunk_string, 'cp_matrix'), '%scp_matrix' % sunk_string)
         wnd_ends = pd.read_hdf('%s/%s.%s%s.h5' % (gglob_dir, chromosome, sunk_string, 'wnd_ends'), '%swnd_ends' % sunk_string)
         wnd_starts = pd.read_hdf('%s/%s.%s%s.h5' % (gglob_dir, chromosome, sunk_string, 'wnd_starts'), '%swnd_starts' % sunk_string)
 
-        print "Genotyping %s" % chromosome
-        for i in xrange(len(regions['starts'])):
+        print("Genotyping %s" % chromosome)
+        for i in range(len(regions['starts'])):
             copies = gglob_get_cp_by_regions(cp_matrix, wnd_starts, wnd_ends, chromosome, 
                                              regions['starts'][i], regions['ends'][i])
             if copies is not None:
@@ -108,10 +108,10 @@ def genotype_DTS_regions(dts_list_file, regions_file, contigs, window):
 
     yield ["chromosome", "start", "end"] + sample_names
 
-    for chromosome, regions in regions_by_chromosome.iteritems():
+    for chromosome, regions in regions_by_chromosome.items():
         copies_by_sample = {}
 
-        for i in xrange(len(dts_list)):
+        for i in range(len(dts_list)):
             dts = dts_list[i]
             sample_name = sample_names[i]
             sample = wnd_cp_indiv(dts, contigs, window)
@@ -122,7 +122,7 @@ def genotype_DTS_regions(dts_list_file, regions_file, contigs, window):
                 regions["ends"]
             )
 
-        for i in xrange(len(regions["starts"])):
+        for i in range(len(regions["starts"])):
             yield list([chromosome, str(regions["starts"][i]), str(regions["ends"][i])] +
                        [str(copies_by_sample[sample][i]) for sample in sample_names])
 
@@ -142,7 +142,7 @@ if __name__ == "__main__":
     genotypes_prefix = args.genotypes_file.split('.')[0]
 
     if args.gglob_dir is None and args.dts_list_file is None:
-        print "Must specify gglob_dir or dts_list_file.\n"
+        print("Must specify gglob_dir or dts_list_file.\n")
         exit(1)
 
     if args.gglob_dir is not None:

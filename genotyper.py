@@ -3,6 +3,7 @@ from sys import stderr
 from sys import stdout
 import numpy as np
 import pysam
+import sys
 
 import time
 import matplotlib.pyplot as plt
@@ -27,7 +28,6 @@ from wnd_cp_data import wnd_cp_indiv
 from gglob import gglob
 
 import cluster as m_cluster
-from sets import Set
 from scipy.stats.mstats import mode
 
 import pysam
@@ -94,21 +94,21 @@ def get_correlation_matrix(starts_ends, g, contig, outdir=None, do_plot=False, a
     mus = np.zeros((l,n_indivs))
 
     min_s, max_e = starts_ends[0], starts_ends[-1]
-    for i in xrange(l):
+    for i in range(l):
         s, e = starts_ends[i], starts_ends[i+1] 
         X, idx_s, idx_e = g.get_gt_matrix(contig, s, e)
         mus[i,:] = np.mean(X,1)   
-        print contig, s, e
+        print(contig, s, e)
 
     c =  np.corrcoef(mus)
 
     #zero out diagnals
     off_diag = []
-    for j in xrange(c.shape[0]-1):
+    for j in range(c.shape[0]-1):
         off_diag.append(c[j,j+1])
 
     if do_plot:
-        print "PLAAAAAAATING!"
+        print("PLAAAAAAATING!")
         plt.gcf().set_size_inches(14,6)
         fig, axes = plt.subplots(2)
         p = axes[0].pcolor(c)
@@ -149,7 +149,7 @@ def get_correlated_segments(all_starts_ends, g, contig, lambda_r_cutoff, outdir,
     while(np.any(off_diag>r_cutoffs)):
         count+=1
         to_pop = []
-        for i in xrange(len(all_starts_ends)-2):
+        for i in range(len(all_starts_ends)-2):
             if np.absolute(off_diag[i])>=r_cutoffs[i]:
                 to_pop.append(i+1)
         new_positions = [] 
@@ -166,7 +166,7 @@ def get_correlated_segments(all_starts_ends, g, contig, lambda_r_cutoff, outdir,
         r_cutoffs = get_r_cutoffs(mus, lambda_r_cutoff) 
 
     s_e_tups = []
-    for i in xrange(len(all_starts_ends)-1):
+    for i in range(len(all_starts_ends)-1):
         s_e_tups.append([all_starts_ends[i], all_starts_ends[i+1]])
     
     return s_e_tups, original_c, mus
@@ -189,7 +189,7 @@ def cluster_segs(segs, max_frac_uniq=0.2):
 
 def get_uniq_chunks(segs, indivs_by_cnv_segs, indivs):
     
-    s_indivs = Set(indivs)
+    s_indivs = set(indivs)
     segs = sorted(segs, key=lambda x:(x[0],x[1]))
     mn,mx = segs[0][0],segs[0][1]
     uniq_chunks = [[]] 
@@ -211,7 +211,7 @@ def get_uniq_chunks(segs, indivs_by_cnv_segs, indivs):
     n_indivs_in_chunk = []
     for inds in indivs_in_chunk:
         #take indivs AND indivs in the chunk
-        n_indivs_in_chunk.append(list(Set(inds).intersection(s_indivs)))
+        n_indivs_in_chunk.append(list(set(inds).intersection(s_indivs)))
 
     return uniq_chunks, n_indivs_in_chunk
 
@@ -219,7 +219,7 @@ def get_segs_from_clustered_indivs(indivs_by_grp, segs_by_grp, indivs_by_cnv_seg
     
     indivs_by_segs = {}
 
-    for grp, indivs in indivs_by_grp.iteritems():
+    for grp, indivs in indivs_by_grp.items():
         segs = segs_by_grp[grp]
         #print len(indivs), segs
         uniq_chunks,indivs_in_chunks = get_uniq_chunks(segs, indivs_by_cnv_segs,indivs)
@@ -286,7 +286,7 @@ def clust_seg_groups_by_gt(clust, indivs, g, indivs_by_cnv_segs, contig):
     
     gt_clusts = [{"gts":all_gts[0], "segs":[clust[0]]}]
     
-    for i in xrange(1,len(clust)):
+    for i in range(1,len(clust)):
         for gt_clust in gt_clusts:
             if np.all(gt_clust["gts"]==all_gts[i]):
                 gt_clust["segs"].append(clust[i])
@@ -305,14 +305,14 @@ def clust_seg_groups_by_gt(clust, indivs, g, indivs_by_cnv_segs, contig):
                 best_seg = tuple(seg)
                 all_indivs+=indivs_by_cnv_segs[tuple(seg)]
             
-        final_seg_to_indiv[best_seg] = list(Set(all_indivs)) 
+        final_seg_to_indiv[best_seg] = list(set(all_indivs)) 
         
     return final_seg_to_indiv
 
 def cluster_overlapping_idGTs(indivs_by_cnv_segs, g, contig, max_uniq_thresh):
 
     segs = []
-    for seg, indivs in indivs_by_cnv_segs.iteritems():
+    for seg, indivs in indivs_by_cnv_segs.items():
         segs.append(seg)
     
     clusts = cluster_segs(segs, max_uniq_thresh)
@@ -326,7 +326,7 @@ def cluster_overlapping_idGTs(indivs_by_cnv_segs, g, contig, max_uniq_thresh):
         
         inds_by_seg = clust_seg_groups_by_gt(clust, g.indivs, g, indivs_by_cnv_segs, contig)
         
-        for seg, inds in inds_by_seg.iteritems():
+        for seg, inds in inds_by_seg.items():
             new_inds_by_seg[tuple(seg)] = inds
             
     return new_inds_by_seg
@@ -355,16 +355,16 @@ def assess_complex_locus(overlapping_call_clusts, g, contig, filt, plot_dir="./p
     s_e_segs, c, mus = get_correlated_segments(all_starts_ends, g, contig, lambda_r_cutoff, plot_dir, do_plot=plot)
      
     mu_cp = np.mean(mus) 
-    print "%d segs merged to %d correlated segs"%(len(all_starts_ends), len(s_e_segs))
+    print("%d segs merged to %d correlated segs"%(len(all_starts_ends), len(s_e_segs)))
 
     t = time.time()
     """
     now remove the non-varying chunks
     """
-    print "getting var chunks..."
+    print("getting var chunks...")
     #THIS IS EATING UP TIME
     CNV_segs, CNV_gXs = filter_invariant_segs(s_e_segs, g, contig) 
-    print "got var chunks in %fs"%(time.time()-t)
+    print("got var chunks in %fs"%(time.time()-t))
     if len(CNV_segs) <= 1 or non_adjacent(CNV_segs):
         indivs_to_assess = [None for i in s_e_segs]
         exclude_loci = [None for i in s_e_segs]
@@ -389,14 +389,14 @@ def assess_complex_locus(overlapping_call_clusts, g, contig, filt, plot_dir="./p
             cnv_segs_by_indiv[indiv] = indiv_cnv_segs
         
         indivs_by_cnv_segs = {}
-        for indiv, cnv_segs in  cnv_segs_by_indiv.iteritems():
+        for indiv, cnv_segs in  cnv_segs_by_indiv.items():
             for s_e in cnv_segs:
                 s_e_tup = tuple(s_e)
                 if not s_e_tup in indivs_by_cnv_segs:
                     indivs_by_cnv_segs[s_e_tup] = []
                 indivs_by_cnv_segs[s_e_tup].append(indiv)
         
-        original_indivs_by_cnv_segs = {tuple(k):list(v) for k,v in indivs_by_cnv_segs.iteritems()}
+        original_indivs_by_cnv_segs = {tuple(k):list(v) for k,v in indivs_by_cnv_segs.items()}
         """
         if high copy, then force more clustering
 
@@ -434,19 +434,19 @@ def assess_complex_locus(overlapping_call_clusts, g, contig, filt, plot_dir="./p
            !!!! doesn't actually work for abutting, just works for space
         """
         to_add = {}
-        for cnv_seg, indivs in original_indivs_by_cnv_segs.iteritems():
+        for cnv_seg, indivs in original_indivs_by_cnv_segs.items():
             s1, e1 = cnv_seg
-            for c_cnv_seg, c_indivs in indivs_by_cnv_segs.iteritems():
+            for c_cnv_seg, c_indivs in indivs_by_cnv_segs.items():
                 s2, e2 = c_cnv_seg
                 if overlap(s1, e1, s2, e2): break
             else:
                 to_add[cnv_seg] = indivs
         
-        for k, v in to_add.iteritems():
+        for k, v in to_add.items():
             indivs_by_cnv_segs[k] = v
 
         #finally cluster these
-        if len(indivs_by_cnv_segs.keys())>1:
+        if len(list(indivs_by_cnv_segs.keys()))>1:
             indivs_by_cnv_segs = cluster_overlapping_idGTs(indivs_by_cnv_segs, g, contig, max_uniq_thresh)
         
         if plot: 
@@ -497,13 +497,13 @@ def get_indivs_in_overlapping_segs(indivs_by_cnv_segs, g):
     s_e_segs = []
     indivs_to_assess = []
     
-    for cnv_seg, inds_called in indivs_by_cnv_segs.iteritems():
-        assess_indivs = Set(g.indivs)   
+    for cnv_seg, inds_called in indivs_by_cnv_segs.items():
+        assess_indivs = set(g.indivs)   
         s1, e1 = cnv_seg
-        for cnv_seg2, indivs2 in indivs_by_cnv_segs.iteritems():
+        for cnv_seg2, indivs2 in indivs_by_cnv_segs.items():
             s2, e2 = cnv_seg2
             if cnv_seg != cnv_seg2 and overlap(s1, e1, s2, e2):
-                assess_indivs = assess_indivs - Set(indivs2)
+                assess_indivs = assess_indivs - set(indivs2)
         
         s_e_segs.append(cnv_seg) 
         indivs_to_assess.append(list(assess_indivs))
@@ -552,7 +552,7 @@ def overlap(s1, e1, s2, e2):
 
 def non_adjacent(CNV_segs):
     
-    for i in xrange(len(CNV_segs)-1):
+    for i in range(len(CNV_segs)-1):
         if CNV_segs[i][1] == CNV_segs[i+1][0]:
             return False
 
@@ -575,11 +575,11 @@ def test_correlation(overlapping_call_clusts, g, contig):
     l = len(all_starts_ends)-1
     mus = np.zeros((n_indivs,l))
      
-    for i in xrange(l):
+    for i in range(l):
         s, e = all_starts_ends[i], all_starts_ends[i+1] 
         X, idx_s, idx_e = g.get_gt_matrix(contig, s, e)
         gX = g.GMM_genotype(X)
-        print s, e, gX.n_clusts
+        print(s, e, gX.n_clusts)
         #Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
         #gXs = g.GMM_genotype(Xs)
         #g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, fn="./test/%d_%d.pdf"%(s, e))
@@ -594,7 +594,7 @@ def test_correlation(overlapping_call_clusts, g, contig):
     gXs = g.GMM_genotype(Xs)
     g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, fn="./test/%d_%d.png"%(s, e))
     c =  np.corrcoef(np.transpose(mus))
-    print c
+    print(c)
     return c
 
 
@@ -604,8 +604,8 @@ def get_best_gt(call, contig, g):
     max_bic_d = -9e9
     best_call = []
     best_se = []
-    print call.starts
-    print call.ends
+    print(call.starts)
+    print(call.ends)
     
     for s in np.unique(np.array(call.starts)):
         for e in np.unique(np.array(call.ends)):
@@ -628,8 +628,8 @@ def get_best_gt(call, contig, g):
    
     gX, gXs, s, e, idx_s, idx_e, s_idx_s, s_idx_e = best_inf
     g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, suffix="_ZBEST")
-    print s, e
-    raw_input()
+    print(s, e)
+    input()
     
 
 class filter_obj:
@@ -680,10 +680,10 @@ class filter_obj:
         #    return False
 
         odds, p = fisher_exact(obs)
-        print "Fisher exact:", p
+        print("Fisher exact:", p)
 
         if p<self.p_thresh:
-            print obs
+            print(obs)
             return True
 
         return False        
@@ -713,7 +713,8 @@ class GMM_gt(object):
         #Deprecated in sklearn 0.14, removed in 0.16
         #self.l_probs, self.posterior_probs = gmm.eval(self.shaped_mus)
         
-        self.l_probs, self.posterior_probs = gmm.score_samples(self.shaped_mus)
+        self.l_probs, self.posterior_probs = gmm.score_samples(self.shaped_mus), gmm.predict_proba(self.shaped_mus)
+
         
         #unique labels are the unique labels and uniq mus are the 
         #mean of the self.mus for each label
@@ -744,9 +745,9 @@ class GMM_gt(object):
         fig.set_figwidth(9)
         fig.set_figheight(4)
         axescolor  = '#f6f6f6'
-        print ax_arr 
-        print self.bics
-        print self.params
+        print(ax_arr) 
+        print(self.bics)
+        print(self.params)
 
         ax_arr[1].plot(self.params, self.bics)
 
@@ -756,13 +757,13 @@ class GMM_gt(object):
         G_x=np.arange(0,max(cps)+1,.1)
         l = self.gmm.means.shape[0]
         
-        for i in xrange(l):
+        for i in range(l):
             c = cm.hsv(float(i)/l,1)
             mu = self.gmm.means[i,0]
             #var = self.gmm.covars[i][0][0]
             var = self.gmm.covars[i]
 
-            G_y = mlab.normpdf(G_x, mu, var**.5)*self.gmm.weights[i]
+            G_y = norm.pdf(G_x, mu, var**.5)*self.gmm.weights[i]
             ax_arr[0].plot(G_x,G_y,color=c)
             ax_arr[0].plot(mu,-.001,"^",ms=10,alpha=.7,color=c)
         
@@ -875,7 +876,7 @@ class GMM_gt(object):
         
         singleton_id = "None"
         if is_singleton:
-            indiv_by_gt = {v:k for k, v in gts_by_indiv.iteritems()}
+            indiv_by_gt = {v:k for k, v in gts_by_indiv.items()}
             gt = labels_to_gt[min_AC_label]
             indiv = indiv_by_gt[gt]
             singleton_id = indiv
@@ -883,7 +884,7 @@ class GMM_gt(object):
         else:
             singleton_cp_z, singleton_logR_z = -1,-1
         
-        all_gts = set(np.unique(np.array(labels_to_gt.values())))
+        all_gts = set(np.unique(np.array(list(labels_to_gt.values()))))
         
         is_biallelic_del = False
         is_biallelic_dup = False
@@ -973,7 +974,7 @@ class GMM_gt(object):
         sorted_labels = self.labels[args]
 
         min_d = 9e9
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             d = np.absolute(sorted_mus[i+1]-sorted_mus[i])
             if sorted_labels[i]!=sorted_labels[i+1] and d<min_d:
                 min_d = d
@@ -1013,7 +1014,7 @@ class GMM_gt(object):
         t = 0 
         p = 0
         
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             mu_0 = sorted_mus[i]
             l_0 = self.mu_to_labels[mu_0]
             
@@ -1042,7 +1043,7 @@ class GMM_gt(object):
         std_lefts = []
         std_rights = []
 
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             mu_left = sorted_mus[i]
             mu_right = sorted_mus[i+1]
             
@@ -1076,8 +1077,8 @@ class GMM_gt(object):
 
         gt_lls_by_indiv = {}
 
-        for i, indiv in enumerate(self.indivs):  
-            lls = {gt:max(np.log(self.posterior_probs[i,label])/np.log(10),-1000) for label, gt in labels_to_gt.iteritems() }
+        for i, indiv in enumerate(self.indivs):
+            lls = {gt:max(np.log(self.posterior_probs[i][label])/np.log(10),-1000) for label, gt in labels_to_gt.items() }
             gt_lls_by_indiv[indiv] = lls 
 
         return gt_lls_by_indiv
@@ -1131,9 +1132,9 @@ class GMM_gt(object):
         
         ## ensure no -1s
         while min(labels_to_gt.values())<0:
-            print "<0's detected..."
+            print("<0's detected...")
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+1
             labels_to_gt = new_labels_to_gt
        
@@ -1145,7 +1146,7 @@ class GMM_gt(object):
             else:
                 d=-1
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+d
             labels_to_gt = new_labels_to_gt
         
@@ -1153,10 +1154,10 @@ class GMM_gt(object):
         for i, indiv in enumerate(self.indivs):  
             gts_by_indiv[indiv] = int(labels_to_gt[self.labels[i]]) 
         
-        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.iteritems()}
+        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.items()}
         labels_to_gt = new_labels_to_gt
 
-        gt_to_labels = {v:k for k,v in labels_to_gt.iteritems()} 
+        gt_to_labels = {v:k for k,v in labels_to_gt.items()} 
 
         return gts_by_indiv, gt_to_labels, labels_to_gt
             
@@ -1248,8 +1249,8 @@ def get_intersection(G1, G2, ws, tol=0.01):
         k-=.2
     
     if o_gran_mx!=(mx-x)/tol:
-        print "\tgaussian intercept granularity reduction:", o_gran_mx, (mx-x)/tol, k
-        print "\tgaussian intercept granularity reduction:", o_gran_mn, (x-mn)/tol, k
+        print("\tgaussian intercept granularity reduction:", o_gran_mx, (mx-x)/tol, k)
+        print("\tgaussian intercept granularity reduction:", o_gran_mn, (x-mn)/tol, k)
 
     if np.absolute((mx-x)/tol)>1e7:
         return None, None, 1, 1 
@@ -1258,8 +1259,8 @@ def get_intersection(G1, G2, ws, tol=0.01):
     xis = np.arange(x,mx, tol)
     xjs = np.arange(mn,x, tol)
 
-    i_integral = np.sum(mlab.normpdf(xis, ui, si)*al)*tol
-    j_integral = np.sum(mlab.normpdf(xjs, uj, sj)*be)*tol
+    i_integral = np.sum(norm.pdf(xis, ui, si)*al)*tol
+    j_integral = np.sum(norm.pdf(xjs, uj, sj)*be)*tol
     overlap = i_integral+j_integral
 
     return x, y, overlap/al, overlap/be
@@ -1272,7 +1273,7 @@ def assess_GT_overlaps(gmm):
     us = []
     ss = []
     ws = []
-    for i in xrange(l):
+    for i in range(l):
         u = gmm.means[i,0]
         #s = gmm.covars[i][0][0]**.5
         s = gmm.covars[i]**.5
@@ -1284,7 +1285,7 @@ def assess_GT_overlaps(gmm):
     
     sort_mu_args = np.argsort(np.array(us))
     all_os = []
-    for k in xrange(len(sort_mu_args)-1):
+    for k in range(len(sort_mu_args)-1):
         i, j = sort_mu_args[k], sort_mu_args[k+1] 
         u_1, u_2 = us[i], us[j]
         s1, s2 = ss[i], ss[j]
@@ -1305,7 +1306,7 @@ def assess_GT_overlaps(gmm):
         
 def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test", plot=False, v=False):
 
-    print "%s %d %d"%(contig, s, e)
+    print("%s %d %d"%(contig, s, e))
     stdout.flush()
 
     if include_indivs!=None and len(include_indivs) == 1:
@@ -1315,18 +1316,19 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
     gX = g.GMM_genotype(X, include_indivs = include_indivs)
     u_o, med_o, overlaps = assess_GT_overlaps(gX.gmm)
     if gX.fail_filter(filt):
-        print "***********FAILED************"
+        print("***********FAILED************")
     if gX.n_clusts ==1:  
-        print "***********1_CLUST************"
+        print("***********1_CLUST************")
     
     mus = np.mean(X,1)
+    print(mus)	
 
     if g.is_segdup(contig, s, e) or np.mean(mus)>=3 or np.amax(mus) >2.5:
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
         if Xs.size > 0:
             gXs = g.GMM_genotype(Xs)
             if gXs.n_clusts == 1:
-                print "***********1_SD_CLUST************"
+                print("***********1_SD_CLUST************")
                 return
             
     if gX.n_clusts == 1 or gX.fail_filter(filt):
@@ -1337,7 +1339,7 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
     
      
     if plot:
-        print "plotting %s %d %d"%(contig, s, e)
+        print("plotting %s %d %d"%(contig, s, e))
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
         if Xs.size != 0:
             gXs = g.GMM_genotype(Xs, include_indivs = include_indivs)
@@ -1369,7 +1371,7 @@ class genotyper(object):
         gts_by_indiv, gts_to_label, labels_to_gt = gX.get_gts_by_indiv()
         
         cns = sorted(gts_to_label.keys())
-        cn_range=range(0,max(cns)+1)
+        cn_range=list(range(0,max(cns)+1))
         
         gt_lls_by_indiv = gX.get_gt_lls_by_indiv(labels_to_gt)
         gX.output_filter_data(self, self.info_ob, contig, s, e, labels_to_gt, gts_by_indiv)
@@ -1381,7 +1383,7 @@ class genotyper(object):
         
         if max(cns)>2:
             max_hap = int(math.ceil(max(cns)/2.0))
-            hap_cns += range(2,max_hap+1) 
+            hap_cns += list(range(2,max_hap+1)) 
         
         hap_cns_to_labels = {1:0}
         
@@ -1397,8 +1399,8 @@ class genotyper(object):
         cps_to_GTs = {} 
         jk_tups = []
         jk_tups_to_cp = {} 
-        for i in xrange(len(hap_cns)):
-            for j in xrange(i,len(hap_cns)):
+        for i in range(len(hap_cns)):
+            for j in range(i,len(hap_cns)):
                 c1, c2 = hap_cns[i], hap_cns[j]
                 cp = c1+c2
                 lbl = "%d/%d"%(hap_cns_to_labels[c1], hap_cns_to_labels[c2])
@@ -1413,9 +1415,9 @@ class genotyper(object):
                 cps_to_GTs[cp].append(lbl)
         
         if v:
-            print "cps_to_GTs", cps_to_GTs
-            print "jk_tups_to_cp", jk_tups_to_cp
-            print "GTs_to_cps:", GTs_to_cps
+            print("cps_to_GTs", cps_to_GTs)
+            print("jk_tups_to_cp", jk_tups_to_cp)
+            print("GTs_to_cps:", GTs_to_cps)
 
         """
         VCF OUTPUT
@@ -1467,7 +1469,7 @@ class genotyper(object):
                 #F(j/k) = (k*(k+1)/2)+j 
                 for jk in jk_tups:
                     j,k = jk
-                    p = (k*(k+1))/2+j
+                    p = int((k*(k+1))/2+j)
                     cp = jk_tups_to_cp[jk]
                     if not cp in cns:
                         GLs[p] = -1000
@@ -1496,12 +1498,12 @@ class genotyper(object):
         self.F_CALL.write("%s\t%d\t%d\n"%(contig, s, e))
         
         if v:
-            print V_outstr
-            print gX.l_probs
-            print gX.posterior_probs
-            print gX.labels
-            print np.unique(gX.labels)
-            print "gts_to_label:", gts_to_label, "labels_to_gt:", labels_to_gt
+            print(V_outstr)
+            print(gX.l_probs)
+            print(gX.posterior_probs)
+            print(gX.labels)
+            print(np.unique(gX.labels))
+            print("gts_to_label:", gts_to_label, "labels_to_gt:", labels_to_gt)
              
     def init_on_indiv_DTS_files(self, **kwargs):
 
@@ -1567,28 +1569,28 @@ class genotyper(object):
         if fn_fasta is not None:
             self.fasta = pysam.FastaFile(fn_fasta)
         k = self.cp_matrix.shape[0]
-        print >>stderr, "loading %d genomes..."%(k)
+        print("loading %d genomes..."%(k), file=stderr)
         t = time.time()
-        print >>stderr, "done (%fs)"%(time.time()-t)
+        print("done (%fs)"%(time.time()-t), file=stderr)
         
     def addGMM(self, gmm, ax, X, labels, overlaps=None):
         
         G_x=np.arange(0,max(X)+1,.1)
         l = gmm.means.shape[0]
         u_labels = np.unique(labels)
-        print u_labels
+        print(u_labels)
         
         all_mus = []
-        for i in xrange(l):
+        for i in range(l):
             #if not i in u_labels: continue
             c = cm.hsv(float(i)/l,1)
             mu = gmm.means[i,0]
             var = gmm.covars[i]
 
-            print mu, var, var**.5
+            print(mu, var, var**.5)
             all_mus.append(mu)
 
-            G_y = mlab.normpdf(G_x, mu, var**.5)*gmm.weights[i]
+            G_y = norm.pdf(G_x, mu, var**.5)*gmm.weights[i]
             ax.plot(G_x,G_y,color=c)
             ax.plot(mu,-.001,"^",ms=10,alpha=.7,color=c)
         
@@ -1696,7 +1698,7 @@ class genotyper(object):
         s_xs = (self.sunk_wnd_starts[s_idx_s:s_idx_e]+self.sunk_wnd_ends[s_idx_s:s_idx_e])/2.0
         #print "shapes", X.shape, Xs.shape
 
-        for i in xrange(X.shape[0]):
+        for i in range(X.shape[0]):
             axarr[2,1].plot(xs, X[i,:])
             axarr[2,0].plot(s_xs, Xs[i,:])
         axarr[2,1].set_xlim(start,end) 
@@ -1760,7 +1762,7 @@ class genotyper(object):
         n_components = len(init_means)
         #gmm = mixture.GMM(n_components, 'spherical')
         #gmm = mixture.GMM(n_components, 'diag')
-        gmm = mixture.GMM(n_components, 'spherical', min_covar=min_covar,n_iter=n_iter, init_params='')
+        gmm = mixture.GaussianMixture(n_components, 'spherical', tol=min_covar, max_iter=n_iter)
         gmm.means = np.reshape(np.array(init_means),(len(init_means),1))
         gmm.weights = np.array(init_weights)
         
@@ -1791,7 +1793,7 @@ class genotyper(object):
         mus = np.mean(X,1)
         if np.amax(mus)>max_cp:
             mus = np.around(mus)
-            gts_by_indiv = {self.indivs[i]:int(mus[i]) for i in xrange(mus.shape[0])}
+            gts_by_indiv = {self.indivs[i]:int(mus[i]) for i in range(mus.shape[0])}
         else:
             gX = self.GMM_genotype(X)
             gts_by_indiv, gts_to_label, labels_to_gt = gX.get_gts_by_indiv()
@@ -1827,7 +1829,7 @@ class genotyper(object):
         #print "done %fs"%(time.time()-t)
         params, bics, gmms, all_labels = [], [], [], []
         
-        print "assessing genotypes" 
+        print("assessing genotypes") 
         t = time.time()
 
         prev_grps = np.array([])
@@ -1847,7 +1849,7 @@ class genotyper(object):
             all_labels.append(labels)
             prev_grps = grps 
             
-        print "done %fs"%(time.time()-t)
+        print("done %fs"%(time.time()-t))
         idx = np.argmin(bics)
         #print params
         #print np.where(np.array(params)==3)

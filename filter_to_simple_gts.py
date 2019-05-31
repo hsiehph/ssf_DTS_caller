@@ -2,6 +2,7 @@ from optparse import OptionParser
 from collections import defaultdict
 
 import numpy as np
+import sys
 from sys import stderr
 import pandas as pd
 import pysam
@@ -60,7 +61,7 @@ if __name__=='__main__':
         if np.sum(gts==2) == gts.shape[0]:continue
 
         
-        for i in xrange(3):
+        for i in range(3):
             s+=np.sum(gts==i)
         
         if s==gts.shape[0] and np.sum(gts==gts[0])!=gts.shape[0]:
@@ -80,9 +81,9 @@ if __name__=='__main__':
     
 
     FOUT = open("%s.afs"%o.fn_out,'w')
-    print >> FOUT, "allele frequency\tcount\tsize_range"
-    for af, count in af_counts.iteritems():
-        print >> FOUT, "%f\t%d\tall"%(af,count)
-        print >> FOUT, "%f\t%d\tgt_50kb"%(af,af_gt50k[af])
+    print("allele frequency\tcount\tsize_range", file=FOUT)
+    for af, count in af_counts.items():
+        print("%f\t%d\tall"%(af,count), file=FOUT)
+        print("%f\t%d\tgt_50kb"%(af,af_gt50k[af]), file=FOUT)
 
     FOUT.close()

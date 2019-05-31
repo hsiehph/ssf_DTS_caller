@@ -7,6 +7,8 @@ import pandas as pd
 import pysam
 import time
 
+import sys
+
 import cluster
 from get_windowed_variance import get_windowed_variance
 import genotyper as gt
@@ -145,8 +147,8 @@ if __name__=='__main__':
         k+=1
 
         if k%1==0: 
-            print "*" * 50
-            print "%d genotypes evaluated..."%k
+            print("*" * 50)
+            print("%d genotypes evaluated..."%k)
         
         if len(overlapping_call_clusts) == 1 or o.simplify_complex_eval:
             for c in overlapping_call_clusts:

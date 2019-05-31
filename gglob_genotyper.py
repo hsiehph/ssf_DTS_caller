@@ -8,8 +8,8 @@ import time
 import numpy as np
 import pandas as pd
 
-from wnd_cp_data import wnd_cp_indiv
-from gglob import gglob
+from .wnd_cp_data import wnd_cp_indiv
+from .gglob import gglob
         
 class bed_output:
     def __init__(self, fn_out):
@@ -51,7 +51,7 @@ def weighted_genotype(cps, wnd_starts, wnd_ends, contig, start, end):
         end_weight = (min(end, wnd_ends[0][wnd_end]) \
                     - min(end, max(start, wnd_starts[0][wnd_end])))        \
                     / float(wnd_ends[0][wnd_end]-wnd_starts[0][wnd_end])
-        cp_weights = np.array([start_weight] + [1 for x in xrange(wnd_start + 1, wnd_end)] +
+        cp_weights = np.array([start_weight] + [1 for x in range(wnd_start + 1, wnd_end)] +
                               [end_weight])
     copies = np.average(cps.ix[:, wnd_start:wnd_end], axis = 1, weights = cp_weights)
     return copies
@@ -98,7 +98,7 @@ if __name__=="__main__":
     
     for contig, t_by_chr in t_loci.groupby('chr', sort=False): 
         #if contig !="chr20": continue
-        print >>stderr, contig
+        print(contig, file=stderr)
         
         g = gglob.init_from_DTS(DTS_dir = o.DTS_dir,
                                 DTS_prefix = o.DTS_prefix,
@@ -115,7 +115,7 @@ if __name__=="__main__":
         sunk_cps_by_locus = {}
         loci = [] 
         for idx, row in t_by_chr.iterrows(): 
-            print row['chr'], row['start'], row['end'] 
+            print(row['chr'], row['start'], row['end']) 
             cps = genotype(g.cp_matrix, g.wnd_starts, g.wnd_ends, row['chr'], row['start'], row['end']) 
             sunk_cps = genotype(g.sunk_cp_matrix, g.sunk_wnd_starts, g.sunk_wnd_ends, row['chr'], row['start'], row['end']) 
             key = "%s:%d-%s"%(row['chr'], row['start'], row['end']) 

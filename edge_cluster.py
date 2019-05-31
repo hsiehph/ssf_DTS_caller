@@ -30,15 +30,15 @@ def hierarch_merge_edges(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fals
     np_copies=np.array(copies)
     np_edges_pass=np.array(edges_passing_cutoff)
     
-    print "dtype"
-    print np_copies
-    print np_copies.dtype
+    print("dtype")
+    print(np_copies)
+    print(np_copies.dtype)
 
     if use_mean:
         medians=get_cp_means(np_copies,np_edges_pass)
     else:
         medians=get_cp_medians(np_copies,np_edges_pass)
-    print medians
+    print(medians)
     med_difs =np.abs(np.diff(medians))
     """ 
     edge at k corresponds to medians at k-1 and k
@@ -52,7 +52,7 @@ def hierarch_merge_edges(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fals
     edge_pos_to_edge = {}
     #edge_pos_to_sorted_loc = {} #WON'T WORK< pos will change
     
-    for i in xrange(arg_dif_sorted.shape[0]): ###ITERATING THROUGH THE DIFS
+    for i in range(arg_dif_sorted.shape[0]): ###ITERATING THROUGH THE DIFS
         delta_i_in_delta_list     = arg_dif_sorted[i]
         edge_i_in_edge_list     = arg_dif_sorted[i]+1
         delta=med_difs[delta_i_in_delta_list]
@@ -135,7 +135,7 @@ def hierarch_merge_edges(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fals
         edges_sorted_by_delta = sorted(edges_sorted_by_delta,key=lambda x:-x.delta)
         min_dif = edges_sorted_by_delta[-1].delta
         
-    print >>stderr,""
+    print("", file=stderr)
     #print edges_sorted_by_delta    
 
     final_edges=sorted(edges_sorted_by_delta,key=lambda x:x.pos)
@@ -145,7 +145,7 @@ def hierarch_merge_edges(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fals
     cps=[]
     #GC_info=defaultdict(list)
     
-    for i in xrange(len(final_edges)-1):
+    for i in range(len(final_edges)-1):
         seg_start=final_edges[i].pos
         seg_end=final_edges[i+1].pos  #so- this is "i" because it will be accesssed int he ends, before it was accessed in the starts, so, it was the LAST start
         #seg_end=final_edges[i+1].pos #cojmmented May 13 2013
@@ -174,7 +174,7 @@ def hierarch_merge_edges_(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fal
         medians=get_cp_means(np_copies,np_edges_pass)
     else:
         medians=get_cp_medians(np_copies,np_edges_pass)
-    print medians
+    print(medians)
     med_difs =np.abs(np.diff(medians))
     """ 
     edge at k corresponds to medians at k-1 and k
@@ -188,7 +188,7 @@ def hierarch_merge_edges_(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fal
     edge_pos_to_edge = {}
     #edge_pos_to_sorted_loc = {} #WON'T WORK< pos will change
     
-    for i in xrange(arg_dif_sorted.shape[0]): ###ITERATING THROUGH THE DIFS
+    for i in range(arg_dif_sorted.shape[0]): ###ITERATING THROUGH THE DIFS
         delta_i_in_delta_list     = arg_dif_sorted[i]
         edge_i_in_edge_list     = arg_dif_sorted[i]+1
         delta=med_difs[delta_i_in_delta_list]
@@ -271,7 +271,7 @@ def hierarch_merge_edges_(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fal
         edges_sorted_by_delta = sorted(edges_sorted_by_delta,key=lambda x:-x.delta)
         min_dif = edges_sorted_by_delta[-1].delta
         
-    print >>stderr,""
+    print("", file=stderr)
     #print edges_sorted_by_delta    
 
     final_edges=sorted(edges_sorted_by_delta,key=lambda x:x.pos)
@@ -281,7 +281,7 @@ def hierarch_merge_edges_(copies,edges_passing_cutoff,max_merge_dif,use_mean=Fal
     cps=[]
     #GC_info=defaultdict(list)
     
-    for i in xrange(len(final_edges)-1):
+    for i in range(len(final_edges)-1):
         seg_start=final_edges[i].pos
         seg_end=final_edges[i].pos  #so- this is "i" because it will be accesssed int he ends, before it was accessed in the starts, so, it was the LAST start
         #seg_end=final_edges[i+1].pos #cojmmented May 13 2013
@@ -310,7 +310,7 @@ def lr_merge_edges(copies,edges_passing_cutoff,max_merge_dif):
     #copies has a large shape,
     #edges_passing is shorter, and refers to the windows in copies
 
-    for i in xrange(2,len(edges_passing_cutoff)):
+    for i in range(2,len(edges_passing_cutoff)):
         curr_chunk_s = final_edges[-1]
         curr_chunk_e = edges_passing_cutoff[i]
         
@@ -325,7 +325,7 @@ def lr_merge_edges(copies,edges_passing_cutoff,max_merge_dif):
     segments_s=[]
     segments_e=[]
     cps=[]
-    for i in xrange(len(final_edges)-1):
+    for i in range(len(final_edges)-1):
         segments_s.append(final_edges[i])
         segments_e.append(final_edges[i+1])
         cps.append(edge_copies[i])
@@ -345,7 +345,7 @@ def get_GC_over_region(chr,start,end,fn_GC):
         i+=1
     
     if i<n_expected:
-        print >> stderr, "compressing GC ARRAY"
+        print("compressing GC ARRAY", file=stderr)
         new_gc_cont = np.zeros(n_expected-1,np.float)
         new_gc_cont=gc_cont[0:n_expected-1]
         gc_cont=new_gc_cont

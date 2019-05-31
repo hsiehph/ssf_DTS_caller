@@ -2,6 +2,7 @@ from traverse_contours import get_contours
 #from edge_cluster import *
 from c_hierarchical_edge_merge import *
 
+import sys
 import numpy as np
 from sys import stderr
 import scipy.ndimage as ndi
@@ -50,15 +51,15 @@ class callset:
         return self
     
     def get_t_stats(self,null_dist):
-        print "getting t-values..." 
+        print("getting t-values...") 
         t = time.time() 
         for call in self.calls:
             call.t_stats = null_dist.get_t_stats(call) 
-        print "done in %fs"%(time.time() - t)
+        print("done in %fs"%(time.time() - t))
         
     def get_p_values(self,null_dist):
 
-        print "getting p-values..." 
+        print("getting p-values...") 
         t = time.time() 
         for call in self.calls:
             #call.p_value = null_dist.get_t_test_p_value(call) 
@@ -67,14 +68,14 @@ class callset:
             #call.p_value = null_dist.get_rank_sum_p_value(call) 
             #call.p_value = null_dist.get_mu_based_p_value(call) 
             #call.p_value = null_dist.get_ll_based_p_value(call) 
-        print "done in %fs"%(time.time() - t)
+        print("done in %fs"%(time.time() - t))
             
     def get_bh_corrected_significant(self,fdr):
         """
         Benjamini Hochberg correction for 
         significance at some fdr
         """
-        print "correcting p-values by Benjamini Hochberg procedure at fdr %f..."%fdr
+        print("correcting p-values by Benjamini Hochberg procedure at fdr %f..."%fdr)
         self.calls = sorted(self.calls,key=lambda x: x.p_value)
         
         m = float(len(self.calls))
@@ -86,10 +87,10 @@ class callset:
             if call.p_value < (fdr * (k+1)/m):
                 max_k = k
 
-        for k in xrange(max_k+1):
+        for k in range(max_k+1):
             self.calls[k].fdr_significant = True
         
-        print "done"
+        print("done")
     
     def get_calls_in_range(self,wnd_start,wnd_end):
         calls = np.array([ call for call in self.calls if (call.wnd_end>wnd_start and call.wnd_start<wnd_end ) ])
@@ -103,7 +104,7 @@ class callset:
             if t_stats:
                 additional = "\t%(mu1)f\t%(var1)f\t%(n1)d\t%(null_mu)f\t%(null_var)f\t%(null_n)d"%(call.t_stats)
 
-            print >>FOUT, "%d\t%s\t%d\t%d\t%f\t%.8e\t%s\t%d%s"%(i,
+            print("%d\t%s\t%d\t%d\t%f\t%.8e\t%s\t%d%s"%(i,
                                                     call.chr, 
                                                     call.start, 
                                                     call.end,
@@ -111,7 +112,7 @@ class callset:
                                                     call.p_value,
                                                     call.fdr_significant and "*" or "-",
                                                     (call.wnd_end-call.wnd_start),
-                                                    additional)
+                                                    additional), file=FOUT)
 
 class ssf_caller:
     def __init__(self,chr,cp_data, starts, ends, cutoff_scale, **kwargs):
@@ -138,13 +139,13 @@ class ssf_caller:
         self.l_vars = np.roll(self.vars,501) 
         self.r_vars = np.roll(self.vars,-501) 
 
-        print >>stderr, "scales range from %f-%f"%(self.scales[0],self.scales[-1])
-        for i in xrange(n_bin_smoothings):
-            print >>stderr,"doing binomial smooth #%d"%i
+        print("scales range from %f-%f"%(self.scales[0],self.scales[-1]), file=stderr)
+        for i in range(n_bin_smoothings):
+            print("doing binomial smooth #%d"%i, file=stderr)
             cp_data=ndi.convolve1d(cp_data,smoothing_kernel)/np.sum(smoothing_kernel)
         
         transitions_by_scale = {}
-        print >>stderr, "finding contours..."
+        print("finding contours...", file=stderr)
         for i_scale,scale in enumerate(self.scales):
             stderr.write("%.2f "%(scale))
             stderr.flush()
@@ -165,9 +166,9 @@ class ssf_caller:
         curr_all_edges_scales=[]
        
         #take all the edges discovered at some scale
-        for scale,edges in self.contour_intersects.iteritems():
+        for scale,edges in self.contour_intersects.items():
             curr_all_edges.extend(edges)
-            curr_all_edges_scales.extend([scale for i in xrange(len(edges))])
+            curr_all_edges_scales.extend([scale for i in range(len(edges))])
             if scale >=cutoff_scale:
                 edges_passing_cutoff.extend(edges)
         edges_passing_cutoff=sorted(set(edges_passing_cutoff))
@@ -187,7 +188,7 @@ class ssf_caller:
         #                                                edges_passing_cutoff, 
         #                                                max_merge,use_means)
         self.segment_edges=(segments_s,segments_e,cps)
-        print >>stderr, "hierarchical clustering completed in %fs"%(time.time()-t)  
+        print("hierarchical clustering completed in %fs"%(time.time()-t), file=stderr)  
     
     def get_exclude_coords(self, ex_starts, ex_ends):
                                                     
@@ -208,7 +209,7 @@ class ssf_caller:
         #print ex_wnd_starts
         #print ex_wnd_ends
 
-        for i in xrange(1, n_exclude):
+        for i in range(1, n_exclude):
             if ex_starts[i] < curr_e:
                 curr_e = ex_ends[i]
             else:
@@ -278,7 +279,7 @@ class ssf_caller:
         wnd_starts,wnd_ends,cps = self.segment_edges
         wnd_starts,wnd_ends,cps = np.array(wnd_starts), np.array(wnd_ends), np.array(cps)
         
-        for i in xrange(len(wnd_starts)-1):
+        for i in range(len(wnd_starts)-1):
             start, end = self.starts[wnd_starts[i]], self.ends[wnd_ends[i]]
             wnd_start, wnd_end = wnd_starts[i], wnd_ends[i]
             
@@ -300,7 +301,7 @@ class ssf_caller:
             else:
                 wnd_start_ends = [tuple([wnd_start, wnd_end])]
             
-            for i in xrange(len(wnd_start_ends)):
+            for i in range(len(wnd_start_ends)):
                 wnd_start = wnd_start_ends[i][0]
                 wnd_end = wnd_start_ends[i][1]
 

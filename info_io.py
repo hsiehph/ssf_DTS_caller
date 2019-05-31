@@ -9,7 +9,7 @@ class info_io(object):
     
     def init_header(self, entry):
         
-        for k,v in entry.iteritems():
+        for k,v in entry.items():
             if not k in self.fields:
                 self.fields.append(k)
 
@@ -26,7 +26,7 @@ class info_io(object):
         entry[key] = value 
     
     def update_entries(self, entry, key_vals):
-        for k, v in key_vals.iteritems():
+        for k, v in key_vals.items():
             entry[k] = v
     
     def output_entry(self, entry):

@@ -100,7 +100,7 @@ if __name__=='__main__':
     caller_by_chr = {}
     
     for chr in chrs:
-        print >>stderr,"%s..."%chr
+        print("%s..."%chr, file=stderr)
         magnitude_vect = cp_data.get_cps_by_chr(chr)
         starts_vect,ends_vect = cp_data.get_wnds_by_chr(chr) 
         
@@ -114,7 +114,7 @@ if __name__=='__main__':
 
         null_dist.add(magnitude_vect, null_filter_wnds)
         
-        print>>stderr, "cutoff_scale:%f"%( cutoff_scale )
+        print("cutoff_scale:%f"%( cutoff_scale ), file=stderr)
         caller = ssf_caller(chr,magnitude_vect,starts_vect,ends_vect,cutoff_scale,use_means=True,max_merge=max_merge,scale_width=1)
         caller_by_chr[chr] = caller
         
@@ -125,12 +125,12 @@ if __name__=='__main__':
     segment_callset.get_p_values(null_dist)
    
     if o.do_plot: 
-        for chr, caller in caller_by_chr.iteritems():
+        for chr, caller in caller_by_chr.items():
             plotter = plot(chr,caller,o.fn_gene_tabix, o.fn_superdups ,o.plot_lims,o.out_viz_dir,segment_callset) 
             #plotter.plot_all(chunk_len=1000000,bp_start=150000000,add_heatmap=False)
             plotter.plot_all(chunk_len=1000000,bp_start=0,add_heatmap=False)
 
     fn_out = "%s"%(o.fn_output)
-    print fn_out
+    print(fn_out)
     segment_callset.output(fn_out,t_stats=False)
 

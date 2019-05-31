@@ -12,7 +12,7 @@ that's a-lot. tooo bloody much maybe I can just zcat?
 if __name__=="__main__":
     
 
-    print "use merge_individual_tables.sh instead, it is faster and more memory efficient"
+    print("use merge_individual_tables.sh instead, it is faster and more memory efficient")
     opts = OptionParser()
     opts.add_option('', '--in_dir', dest='in_dir')
     opts.add_option('', '--outfile', dest='fn_out')
@@ -27,9 +27,9 @@ if __name__=="__main__":
         fname = f.split("/dCGH_")[-1]
         g_test, g_ref = fname.split(".")[0:2]
         l = len(calls['rank'])
-        calls['indiv_reference'] =  pd.Series([g_ref for i in xrange(l)], index = calls.index)
-        calls['indiv_test'] =  pd.Series([g_test for i in xrange(l)], index = calls.index)
-        print "%d/%d (%f%%) %s"%(k, tlen, 100*float(k)/tlen,  f)
+        calls['indiv_reference'] =  pd.Series([g_ref for i in range(l)], index = calls.index)
+        calls['indiv_test'] =  pd.Series([g_test for i in range(l)], index = calls.index)
+        print("%d/%d (%f%%) %s"%(k, tlen, 100*float(k)/tlen,  f))
      
     call_table = pd.concat(all_calls) 
     #call_table.to_csv(open(o.fn_out),

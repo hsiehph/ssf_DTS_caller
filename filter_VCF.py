@@ -9,8 +9,8 @@ import gzip
 import subprocess
 
 
-import cStringIO
-io_method = cStringIO.StringIO
+import io
+io_method = io.StringIO
 
 
 if __name__=="__main__":
@@ -26,7 +26,7 @@ if __name__=="__main__":
                      "CNV":o.CNV_lscore}
     for l in stdin:
         if l[0:1] == "#":
-            print l.rstrip()
+            print(l.rstrip())
         else:
             t = l.split("\t",8)
 
@@ -34,5 +34,5 @@ if __name__=="__main__":
             inf =  t[7]
             inf_d = {i.split('=')[0]:i.split("=")[1]  for i in inf.split(";") }
             if float(inf_d["LPROBS"]) >= type_to_cutoff[inf_d['SVTYPE']]:
-                print l.rstrip()
+                print(l.rstrip())
 

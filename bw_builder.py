@@ -10,8 +10,8 @@ import time
 import numpy as np
 import pandas as pd
 
-from wnd_cp_data import wnd_cp_indiv
-from gglob import gglob
+from .wnd_cp_data import wnd_cp_indiv
+from .gglob import gglob
 
 class output:
     def __init__(self, contig_prefix, output_contigs):
@@ -37,7 +37,7 @@ class output:
                         10 :"255,0,0"}
         
         s_outdata = [self.outdata[0]]
-        for i in xrange(1,len(self.outdata)):
+        for i in range(1,len(self.outdata)):
             contig, start, end, cp = self.outdata[i]
             if contig == s_outdata[-1][0] and cp == s_outdata[-1][3]:
                 s_outdata[-1][2] = end
@@ -45,11 +45,11 @@ class output:
                 s_outdata.append(self.outdata[i])
         
         fn_tmp = tempfile.NamedTemporaryFile(mode='w', dir="/tmp").name
-        print fn_tmp
+        print(fn_tmp)
         with open(fn_tmp, 'w') as F:
             for l in s_outdata:
                 contig, start, end, cp = l
-                print >>F, "\t".join(["%s%s"%(self.contig_prefix,contig),str(start),str(end),indiv,"0","+","0","0",color_hash[cp]]) 
+                print("\t".join(["%s%s"%(self.contig_prefix,contig),str(start),str(end),indiv,"0","+","0","0",color_hash[cp]]), file=F) 
             
         #hg19_contigs = "/net/eichler/vol7/home/psudmant/genomes/contigs/hg19_contigs.txt"
         contigs = self.output_contigs 
@@ -59,11 +59,11 @@ class output:
                                                                                                                          indiv,
                                                                                                                          name,
                                                                                                                          fn_out)
-        print cmd 
+        print(cmd) 
         ret = os.system(cmd)
         if ret != 0:
             exit(ret)
-        print fn_tmp
+        print(fn_tmp)
         os.unlink(fn_tmp)
         fn_out_td = "%s.trackdef"%(fn_out)
         with open(fn_out_td,'w') as F:
@@ -97,13 +97,13 @@ if __name__=="__main__":
     
     c_out = output(o.contig_prefix, o.output_contigs) 
     for contig in wnd_cp.contigs:   
-        print  >>stderr, contig
+        print(contig, file=stderr)
         
         cps = wnd_cp.get_cps_by_chr(contig)
         wnd_starts, wnd_ends = wnd_cp.get_wnds_by_chr(contig)
          
         prev_start = 0
-        for i in xrange(0, cps.shape[0]-1):
+        for i in range(0, cps.shape[0]-1):
             s, e = wnd_starts[i], wnd_ends[i]
             mid = (s+e)/2
 

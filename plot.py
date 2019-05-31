@@ -25,11 +25,11 @@ class plot():
         total_chr_len = self.caller.ends[-1]
         bp_end = min(total_chr_len,bp_start+chunk_len)
         
-        print "%s:0-%d"%(self.chr, total_chr_len)
+        print("%s:0-%d"%(self.chr, total_chr_len))
         
         while bp_start<total_chr_len:
             
-            print "%s:%d-%d"%(self.chr,bp_start, bp_end)
+            print("%s:%d-%d"%(self.chr,bp_start, bp_end))
             #new_plot = line_plot(chr,bp_start,bp_end,self.caller,self.fn_gene_tabix,self.fn_dup_tabix)
             new_plot = line_plot(self.chr,bp_start,bp_end,self.caller,self.fn_gene_tabix,self.fn_dup_tabix,self.callset,add_heatmap=add_heatmap)
             new_plot.plot_features()
@@ -145,7 +145,7 @@ class line_plot:
 
         max_loc = -1
         y=0
-        print self.chr,self.start,self.end
+        print(self.chr,self.start,self.end)
         #for dup_line in tabix.Tabix(fn_dups).fetch(self.chr,self.start,self.end):
         #for i in xrange(locs.shape[0]):
         tbx_dups = pysam.Tabixfile(fn_dups) 
@@ -257,7 +257,7 @@ class line_plot:
 
         ders = self.caller.der1[:,wnd_start:wnd_end]
         magnitudes = ders.ravel() 
-        print "RANGE:",np.min(ders), np.max(ders) 
+        print("RANGE:",np.min(ders), np.max(ders)) 
         dir_ders = ders.copy()  
         dir_ders[dir_ders>0] = 1 
         dir_ders[dir_ders<0] = -1 
@@ -268,11 +268,11 @@ class line_plot:
         xs = np.tile((starts+ends)/2.0,n_scales)
         ys = np.repeat(np.arange(n_scales),n_xs)
         
-        print xs, ys, magnitudes
-        print "pcoloring" 
+        print(xs, ys, magnitudes)
+        print("pcoloring") 
         self.heat_ax.pcolor(ders,cmap=cm.RdBu,vmax=.1, vmin=-.1)
         self.heat_ax_dir.pcolor(dir_ders,cmap=cm.RdBu,vmax=2,vmin=-2)
-        print "done" 
+        print("done") 
         
         #self.hist2d.pcolormesh(xs,ys,magnitudes, shading='gouraud')
         #gridsize=n_xs
@@ -291,12 +291,12 @@ class line_plot:
         self.axes.plot(x_coords,self.caller.cp_data[wnd_start:wnd_end],alpha=.8,color='b',linewidth=.3,marker='o', markersize=1)
         
         if x_coords.shape[0] ==0:
-            print >>stderr, "BAILING OUT - in a gap"
+            print("BAILING OUT - in a gap", file=stderr)
             return
 
         self.der_axes.plot([x_coords[0],x_coords[-1]],[self.caller.cutoff_scale*self.e_spacer,self.caller.cutoff_scale*self.e_spacer],alpha=.5,color='b')
         
-        for scale,intersects in self.caller.contour_intersects.iteritems():
+        for scale,intersects in self.caller.contour_intersects.items():
             intersects =np.array(intersects)
             intersect_in_range=intersects[np.where((intersects>=wnd_start)&(intersects<wnd_end))[0]]
             l=intersect_in_range.shape[0]
@@ -311,10 +311,10 @@ class line_plot:
         locs=np.where( ((segs_s<wnd_start)&(segs_e>wnd_start))|
                                         ((segs_s<wnd_end)&(segs_e>wnd_end))|
                                         ((segs_s>=wnd_start)&(segs_e<=wnd_end)) )[0]
-        print locs
+        print(locs)
         
         if locs.shape[0]==0: 
-            print >>stderr, "BAILING OUT - locs.shape is empty"
+            print("BAILING OUT - locs.shape is empty", file=stderr)
             return
         
         mn=np.amin(locs)
@@ -330,8 +330,8 @@ class line_plot:
         #cps_in_range=seg_cps[locs]
         l=starts_in_range.shape[0]
         
-        print "starts",starts_in_range
-        print "ends",ends_in_range
+        print("starts",starts_in_range)
+        print("ends",ends_in_range)
         
         #xs=[self.caller.starts[starts_in_range],self.caller.ends[ends_in_range]]
         #xs=[self.caller.starts[starts_in_range],self.caller.starts[ends_in_range]]
@@ -359,7 +359,7 @@ class line_plot:
 
     def plot_CN_summary(self,wnd_DTS_by_genome,genome_to_plot_group,plot_groups_to_indivs,wnd_start,wnd_end,starts,color_hash):
 
-        for plot_group,indivs in plot_groups_to_indivs.iteritems():
+        for plot_group,indivs in plot_groups_to_indivs.items():
             n_indivs=len(indivs)
             cp_stack = np.zeros([n_indivs,wnd_end-wnd_start])
             c=color_hash[plot_group.upper()]
@@ -368,7 +368,7 @@ class line_plot:
                 cp_stack[i,:]=wnd_DTS_by_genome[indiv]['copy'][self.chr][wnd_start:wnd_end]
                 stderr.write(".")
                 stderr.flush()
-            print >>stderr,""
+            print("", file=stderr)
             mu=np.mean(cp_stack,0)
             sd=np.std(cp_stack,0)
             mn=np.min(cp_stack,0)
@@ -386,7 +386,7 @@ class line_plot:
         pops = []
         lines= []
 
-        for plot_group, color in color_hash.iteritems(): 
+        for plot_group, color in color_hash.items(): 
             pops.append(plot_group)
             lines.append(mpl.lines.Line2D([0,1],[0,0],color=color,linewidth=6))
         self.cp_ax.legend(lines,pops,ncol=4,loc=2,mode='expand',prop=mpl.font_manager.FontProperties(size=6))

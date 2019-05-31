@@ -1,3 +1,5 @@
+#!/bin/env python3
+
 """
 classes and helper functions for clustering calls
 """
@@ -12,14 +14,11 @@ import matplotlib.pyplot as plt
 import matplotlib
 import scipy.ndimage as ndi
 import scipy.spatial.distance as dist 
-from sets import Set
 import networkx as nx
 import time
 import pysam
 import math
 import pdb
-
-from sets import Set
 
 from genotyper import genotyper
 
@@ -36,32 +35,32 @@ class callset_table(object):
     """
 
     def __init__(self, fn_table):
-        print >>stderr, "loading table..."
+        print("loading table...", file=stderr)
         t=time.time()
         self.pd_table =  pd.read_csv(fn_table, 
                                      sep = '\t', 
                                      header=0, 
                                      compression = 'gzip')
-        print >>stderr, "done (%fs)"%(time.time()-t)
+        print("done (%fs)"%(time.time()-t), file=stderr)
     
     def filter_by_chr(self, contig):
 
-        print >>stderr, "filtering calls to only %s"%(contig)
+        print("filtering calls to only %s"%(contig), file=stderr)
         self.pd_table = self.pd_table[self.pd_table['chr']==contig]
 
     def filter_by_gsize(self, max_size):
 
-        print >>stderr, "filtering calls >%dbp"%(max_size)
+        print("filtering calls >%dbp"%(max_size), file=stderr)
         self.pd_table = self.pd_table[(self.pd_table['end']-self.pd_table['start'])<=max_size]
     
     def sort(self):
         """
         sort on chr, start, end
         """
-        print >>stderr, "sorting..."
+        print("sorting...", file=stderr)
         t=time.time()
-        self.pd_table = self.pd_table.sort(['chr', 'start', 'end'])
-        print >>stderr, "done (%fs)"%(time.time()-t)
+        self.pd_table = self.pd_table.sort_values(['chr', 'start', 'end'])
+        print("done (%fs)"%(time.time()-t), file=stderr)
 
 class simple_callset_table(callset_table):
 
@@ -76,7 +75,7 @@ class indiv_callset_table(callset_table):
         super(indiv_callset_table, self).__init__(fn_table)
         
     def output(self, fn_out):
-        print >>stderr, "outputting bed file of filtered calls..."
+        print("outputting bed file of filtered calls...", file=stderr)
         indiv=fn_out.split("/")[-1].split(".")[0]
         Fout = open(fn_out,'w')
         Fout.write("""track name="%s_indiv_calls" description="%s_indivs_calls" visibility=2 itemRgb="On"\n"""%(indiv, indiv))
@@ -94,14 +93,14 @@ class indiv_callset_table(callset_table):
         """
         apply size cutoff (no calls of size 1 window!)
         """
-        print >>stderr, "parsing calls with p<=%.4g and l>=%d..."%(p_cutoff, size_cutoff)
-        print >>stderr, "initial table size: %d"%(self.pd_table.shape[0])
+        print("parsing calls with p<=%.4g and l>=%d..."%(p_cutoff, size_cutoff), file=stderr)
+        print("initial table size: %d"%(self.pd_table.shape[0]), file=stderr)
         if divide_by_mu: 
             where_p_sig=((self.pd_table['p']/np.exp((self.pd_table['mu']**2)))<p_cutoff)
             where_mu_sig=(np.absolute(self.pd_table['mu'])>min_mu)
             self.pd_table = self.pd_table[(where_p_sig | where_mu_sig)]
-            print "p-sig:", np.sum(where_p_sig)
-            print "mu-sig:", np.sum(where_mu_sig)
+            print("p-sig:", np.sum(where_p_sig))
+            print("mu-sig:", np.sum(where_mu_sig))
         else:
             self.pd_table = self.pd_table[(self.pd_table['p']<p_cutoff)]
 
@@ -111,8 +110,8 @@ class indiv_callset_table(callset_table):
         #self.pd_table = self.pd_table[((self.pd_table['window_size']>1)|(np.absolute(self.pd_table['mu'])>=single_window_cutoff))]
         #self.pd_table = self.pd_table[( (self.pd_table['window_size']>=size_cutoff) |
         #                                (self.pd_table['p']>0) )]
-        print >>stderr, "final table size: %d"%(self.pd_table.shape[0])
-        print >>stderr, "done"
+        print("final table size: %d"%(self.pd_table.shape[0]), file=stderr)
+        print("done", file=stderr)
 
 class simple_call:
         
@@ -138,16 +137,16 @@ class indiv_cluster_calls:
         """
         self.callset_table = copy.deepcopy(callset_table)
         self.callset_table.sort()
-        print >> stderr, "getting overlapping elements..."
+        print("getting overlapping elements...", file=stderr)
         t=time.time()
         self.overlapping_calls_by_chr, self.n_overlapping = self.get_overlapping_calls()
-        print >>stderr, "done (%fs)"%(time.time()-t)
-        print >>stderr, "%d overlapping calls"%self.n_overlapping
+        print("done (%fs)"%(time.time()-t), file=stderr)
+        print("%d overlapping calls"%self.n_overlapping, file=stderr)
     
     def get_curr_chr_dCGHs(self,chr, dCGHs):
         
         curr_dCGHs = {}
-        for key,d in dCGHs.iteritems():
+        for key,d in dCGHs.items():
             curr_dCGHs[key] = d.get_cp_ratio_by_chr(chr)
         
         return curr_dCGHs
@@ -174,15 +173,15 @@ class indiv_cluster_calls:
             4. collapse overlaps 
             5. get the best breakpoints
         """
-        print >>stderr, "resolving breakpoints..."
+        print("resolving breakpoints...", file=stderr)
         final_calls = []
         
-        for chr, overlapping_calls in self.overlapping_calls_by_chr.iteritems():
-            print >>stderr, chr, "%d calls in this chr"%(len(overlapping_calls))
+        for chr, overlapping_calls in self.overlapping_calls_by_chr.items():
+            print(chr, "%d calls in this chr"%(len(overlapping_calls)), file=stderr)
             
             indiv_cps = indiv_DTS.get_cps_by_chr(chr) 
             ref_cps = {}
-            for ref, refDTS in ref_DTSs.iteritems():
+            for ref, refDTS in ref_DTSs.items():
                 ref_cps[ref] = refDTS.get_cps_by_chr(chr) 
             
             g = genotyper(chr, gglob_dir=gglob_dir, plot_dir=out_viz_dir, subset_indivs = subset_indivs) 
@@ -212,12 +211,13 @@ class indiv_cluster_calls:
                     """
                     d = self.get_delta(clust, wnd_starts, wnd_ends, curr_dCGHs, indiv_cps, ref_cps)
                     if clust.size == 1: 
-                        print "skipping single call cluster"
+                        print("skipping single call cluster")
                         continue
                     if d > 1.0:
                         variable_clusts.append(clust)
                     elif d>min_d:
                         X, idx_s, idx_e = g.get_gt_matrix(chr, clust.get_med_start(), clust.get_med_end())
+                        print(X)
                         gX = g.GMM_genotype(X)
                         if gX.gmm.n_components>1 and gX.is_var(indiv_id, g):
                             variable_clusts.append(clust)
@@ -235,10 +235,10 @@ class indiv_cluster_calls:
                 raw_input()
                 """
                 #overlapping_call_clusts = get_overlapping_call_clusts(resolved_calls, flatten = True)
-            print "n-final_calls:%d n_assessed:%d time_elapsed:%fs"%(len(final_calls), n_assessed, time.time()-t)
+            print("n-final_calls:%d n_assessed:%d time_elapsed:%fs"%(len(final_calls), n_assessed, time.time()-t))
 
-        print >>stderr, "done"
-        print >>stderr, "%d calls with likelihood <%f"%(len(final_calls), ll_cutoff)
+        print("done", file=stderr)
+        print("%d calls with likelihood <%f"%(len(final_calls), ll_cutoff), file=stderr)
         return final_calls
 
     def get_final_call(self, resolved_calls):
@@ -262,7 +262,7 @@ class indiv_cluster_calls:
             contig = call.chr
             ref_indivs+=call.ref_indivs
         
-        ref_indivs=list(Set(ref_indivs))
+        ref_indivs=list(set(ref_indivs))
         
         f_call = simple_call(contig, mn, mx, ref_indivs, resolved_calls)
         return f_call
@@ -276,7 +276,7 @@ class indiv_cluster_calls:
         w_s, w_e = np.searchsorted(wnd_starts, start), np.searchsorted(wnd_ends, end)
         
         ref_indivs = call_clust.ref_indivs
-        ref_indivs=list(Set(ref_indivs))
+        ref_indivs=list(set(ref_indivs))
 
         ds = []
         for ref in ref_indivs:
@@ -308,19 +308,19 @@ class indiv_cluster_calls:
         ref_indivs = []
         for call in resolved_calls: 
             s,e = call.get_min_start_max_end()
-            print 'min,max', s,e
-            print 'size,', call.size
-            print "ll", call.get_log_likelihood()
+            print('min,max', s,e)
+            print('size,', call.size)
+            print("ll", call.get_log_likelihood())
             #s = call.get_best_start()
             #e = call.get_best_end()
             s = call.get_med_start()
             e = call.get_med_end()
-            print 'best', s,e
+            print('best', s,e)
             mn = min(s,mn)
             mx = max(e,mx)
             ref_indivs+=call.ref_indivs
         
-        ref_indivs=list(Set(ref_indivs))
+        ref_indivs=list(set(ref_indivs))
         w_s, w_e = np.searchsorted(wnd_starts,mn), np.searchsorted(wnd_ends,mx)
         
         #self.get_best_call(resolved_calls, wnd_starts, wnd_ends, ref_indivs, dCGHs)
@@ -341,7 +341,7 @@ class indiv_cluster_calls:
 
 
         i =0
-        for key, d in dCGHs.iteritems():
+        for key, d in dCGHs.items():
             #dsum =np.sum(d[wnd_start:wnd_end])
             #print dsum, colors[i%n_colors]
             #t_vect = t_vect*np.power(d[wnd_start:wnd_end],1)
@@ -352,8 +352,8 @@ class indiv_cluster_calls:
                 
                 s,e, ps, pe = self.get_max_path(cur_d, wnd_starts[wnd_start:wnd_end], wnd_ends[wnd_start:wnd_end])
                 mu = np.median(cur_d[ps:pe])
-                print ps, pe
-                print mu, s, e
+                print(ps, pe)
+                print(mu, s, e)
                 axes[0,0].plot([s,e], [mu,mu], colors[i%n_colors],marker='+', ls='-')
                 axes[0,0].plot([s,e], [mu,mu], colors[i%n_colors])
                 
@@ -384,11 +384,11 @@ class indiv_cluster_calls:
         axes[0,1].plot(mids, t_vect)
         axes[1,0].plot(mids, indiv_cps[wnd_start:wnd_end],'g', lw=1)
         axes[1,0].plot(mids, indiv_cps[wnd_start:wnd_end],'.g')
-        for ref, cps in ref_cps.iteritems():
+        for ref, cps in ref_cps.items():
             axes[1,0].plot(mids, cps[wnd_start:wnd_end], lw=.1)
             
-        for i in xrange(2):
-            for j in xrange(2):
+        for i in range(2):
+            for j in range(2):
                 axes[i,j].set_xlim([plt_s,plt_e])
                 ym=axes[i,j].get_ylim()
                 if i==0 and j ==1: ym = [1e-50,ym[1]]
@@ -423,7 +423,7 @@ class indiv_cluster_calls:
         min_w_start = all_wss[0]
         max_w_end = all_wes[-1]
 
-        if len(ref_indivs) < len(dCGHs.keys()): 
+        if len(ref_indivs) < len(list(dCGHs.keys())): 
             """
             if there ARE controls
                 get the mean of the controls... or median?
@@ -436,7 +436,7 @@ class indiv_cluster_calls:
 
             i_controls, i_called = 0, 0
             
-            for indiv, dCGH in dCGHs.iteritems(): 
+            for indiv, dCGH in dCGHs.items(): 
                 if indiv in ref_indivs:
                     a_called[i_called,:] = dCGH[min_w_start:max_w_end]
                     i_called+=1
@@ -447,20 +447,20 @@ class indiv_cluster_calls:
             med_controls = np.median(a_controls, 1)
             
 
-            print med_controls, med_controls.shape
-            print a_called
+            print(med_controls, med_controls.shape)
+            print(a_called)
             return
         else:
             """
             if no controls
             """
-            print "NO CONTROLS"
-            print len(ref_indivs), len(dCGHs.keys())
+            print("NO CONTROLS")
+            print(len(ref_indivs), len(list(dCGHs.keys())))
             exit(1)
         
         #all_starts/all_ends sorted
-        print all_starts
-        print all_ends
+        print(all_starts)
+        print(all_ends)
         w_s, w_e = np.searchsorted(wnd_starts,mn), np.searchsorted(wnd_ends,mx)
         return
 
@@ -481,10 +481,10 @@ class indiv_cluster_calls:
             front seg and back seg
         """
         
-        for j in xrange(10, l):
+        for j in range(10, l):
             sum_back_seg = csum[-1] - csum[j] 
             len_back_seg = l-j  
-            for i in xrange(10,l):
+            for i in range(10,l):
                 sum_front_seg = csum[i]
                 len_front_seg = i
                 mu = (sum_front_seg+sum_back_seg)/(len_back_seg+len_front_seg)
@@ -519,19 +519,19 @@ class indiv_cluster_calls:
         chr7    127471196  127472363  Pos1  0  +  127471196  127472363  255,0,0
         """
         with open(fn,'w') as F:    
-            print >>F, """track name="%s" description="%s" visibility=2 itemRgb="On" """%(id, id)
-            for chr, overlapping_calls in self.overlapping_calls_by_chr.iteritems():
+            print("""track name="%s" description="%s" visibility=2 itemRgb="On" """%(id, id), file=F)
+            for chr, overlapping_calls in self.overlapping_calls_by_chr.items():
                 for overlap_cluster in overlapping_calls:
-                    rgb_str = "%d,%d,%d"%(tuple([random.randrange(0,255,1) for r in xrange(3)]))
+                    rgb_str = "%d,%d,%d"%(tuple([random.randrange(0,255,1) for r in range(3)]))
                     for call in overlap_cluster.calls:
-                        print >>F, "%s\t%d\t%d\t%f\t%f\t+\t%d\t%d\t%s"%(overlap_cluster.chr, 
+                        print("%s\t%d\t%d\t%f\t%f\t+\t%d\t%d\t%s"%(overlap_cluster.chr, 
                                 call['start'],
                                 call['end'],
                                 call['p'],
                                 call['p'],
                                 call['start'],
                                 call['end'],
-                                rgb_str)
+                                rgb_str), file=F)
     
     def get_overlapping_calls(self):
         """
@@ -631,7 +631,7 @@ class indiv_call_cluster:
         """
         take all calls w/ the same start, and average their ends
         """
-        print >>stderr, "over-simplifying..."
+        print("over-simplifying...", file=stderr)
         curr_call=[]
         new_calls = []
         new_all_starts = []
@@ -746,14 +746,14 @@ class indiv_call_cluster:
         for call in self.calls:
             dd_starts[call['start']]+=np.log10(call['p'])
         
-        return sorted(dd_starts.iteritems(), key=lambda x: x[1])[0][0]
+        return sorted(iter(dd_starts.items()), key=lambda x: x[1])[0][0]
     
     def get_best_end(self):
         dd_starts = defaultdict(int)
         for call in self.calls:
             dd_starts[call['end']]+=np.log10(call['p'])
         
-        return sorted(dd_starts.iteritems(), key=lambda x: x[1])[0][0]
+        return sorted(iter(dd_starts.items()), key=lambda x: x[1])[0][0]
 
     def get_med_start(self):
         return np.median(np.array(self.all_starts))
@@ -772,7 +772,7 @@ class indiv_call_cluster:
      
     def print_out(self):
         for c in self.calls:
-            print "\t", c['chr'], c['start'], c['end'], np.log10(c['p']), c['window_size']
+            print("\t", c['chr'], c['start'], c['end'], np.log10(c['p']), c['window_size'])
 
     def frac_overlap(self, i, j):
         si, ei = self.calls[i]['start'],  self.calls[i]['end']  
@@ -786,7 +786,7 @@ class indiv_call_cluster:
                    float(overlap)/(ej-sj))
     
     def plot(self, Z, cutoff):
-        print self.chr, min(self.all_starts), max(self.all_ends)
+        print(self.chr, min(self.all_starts), max(self.all_ends))
         lbls = ["%s:%d-%d"%(c['chr'], c['start'], c['end']) for c in self.calls]
         
         dendro = hclust.dendrogram(Z, orientation='right', labels = lbls, color_threshold = cutoff)
@@ -801,7 +801,7 @@ class indiv_call_cluster:
         colors = ['b','g','r','c','m','y','k']
         n_colors = len(colors)
 
-        for clust in Set(list(grps)):
+        for clust in set(list(grps)):
             for idx in np.where(grps == clust)[0]:
                 ax2.plot([self.calls[idx]['start'], self.calls[idx]['end']],
                          [k,k], 
@@ -828,8 +828,8 @@ class indiv_call_cluster:
 
         mat = np.zeros((self.size,self.size))
         
-        for i in xrange(self.size):
-            for j in xrange(self.size):
+        for i in range(self.size):
+            for j in range(self.size):
                 #mat[i,j] = 1-((self.frac_overlap(i,j)+self.frac_overlap(j,i))/2.0)
                 mat[i,j] = 1-(self.frac_overlap(i,j))
         
@@ -913,7 +913,7 @@ class call_cluster(object):
     
     def get_med_start_end(self):
         l = len(self.calls)
-        idx = l/2
+        idx = int(l/2)
         return sorted(self.starts)[idx], sorted(self.ends)[idx]
 
 
@@ -943,8 +943,8 @@ class call_cluster(object):
         l = len(self.calls)
         mat = np.zeros((l,l))
 
-        for i in xrange(l):
-            for j in xrange(l):
+        for i in range(l):
+            for j in range(l):
                 mat[i,j] = 1-(self.frac_overlap(i,j, max_dif, max_frac_uniq))
         
         mat=1.-dist.squareform( (1-mat) * (np.diag(np.repeat(1,l),0) -1) * -1)
@@ -1021,7 +1021,7 @@ class cluster_callsets(object):
             max_end = max(max_end, max(call_clust.ends))
             j+=1
 
-        print min_start, max_end, len(overlapping_call_clusts)
+        print(min_start, max_end, len(overlapping_call_clusts))
             
         plt.gcf().set_size_inches(14,6)
         fig, axes = plt.subplots(2,2) 
@@ -1061,7 +1061,7 @@ class cluster_callsets(object):
         
         i=0
         y3=0
-        for seg, indivs in indivs_by_seg.iteritems():
+        for seg, indivs in indivs_by_seg.items():
             for indiv in indivs:      
                 axes[1,1].plot(seg,[y3,y3], colors[i%n_colors], lw=1.5)
                 y3-=1
@@ -1072,7 +1072,7 @@ class cluster_callsets(object):
         y3=0
         i=0 
         #each indivs cnv segs
-        for indiv, cnv_segs in cnv_segs_by_indiv.iteritems():
+        for indiv, cnv_segs in cnv_segs_by_indiv.items():
             for seg in cnv_segs:
                 axes[0,1].plot(seg,[y3,y3], colors[i%n_colors], lw=1.5)
             y3-=.1
@@ -1109,7 +1109,7 @@ class cluster_callsets(object):
         of those calls grouped into recip-overlapping clusters
         """
         lists_of_overlapping_calls, n = self.get_overlapping_calls()
-        print >>stderr, "%d overlapping calls"%n
+        print("%d overlapping calls"%n, file=stderr)
         
         for overlapping_call_cluster in self.subset_call_list(lists_of_overlapping_calls, total_subsets, subset):
             if len(overlapping_call_cluster.calls)==1:
@@ -1128,7 +1128,7 @@ class cluster_callsets(object):
             call_groups_to_assess.append(overlap_call_groups[i])
             i+=total_subsets
         
-        print >>stderr, "%d calls in subset"%(len(call_groups_to_assess))
+        print("%d calls in subset"%(len(call_groups_to_assess)), file=stderr)
         return call_groups_to_assess
 
 

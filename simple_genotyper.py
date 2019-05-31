@@ -104,8 +104,8 @@ def get_intersection(G1, G2, ws, tol=0.01):
         k-=.2
     
     if o_gran_mx!=(mx-x)/tol:
-        print "\tgaussian intercept granularity reduction:", o_gran_mx, (mx-x)/tol, k
-        print "\tgaussian intercept granularity reduction:", o_gran_mn, (x-mn)/tol, k
+        print("\tgaussian intercept granularity reduction:", o_gran_mx, (mx-x)/tol, k)
+        print("\tgaussian intercept granularity reduction:", o_gran_mn, (x-mn)/tol, k)
 
     if np.absolute((mx-x)/tol)>1e7:
         return None, None, 1, 1 
@@ -128,7 +128,7 @@ def assess_GT_overlaps(gmm):
     us = []
     ss = []
     ws = []
-    for i in xrange(l):
+    for i in range(l):
         u = gmm.means[i,0]
         #s = gmm.covars[i][0][0]**.5
         s = gmm.covars[i]**.5
@@ -140,7 +140,7 @@ def assess_GT_overlaps(gmm):
     
     sort_mu_args = np.argsort(np.array(us))
     all_os = []
-    for k in xrange(len(sort_mu_args)-1):
+    for k in range(len(sort_mu_args)-1):
         i, j = sort_mu_args[k], sort_mu_args[k+1] 
         u_1, u_2 = us[i], us[j]
         s1, s2 = ss[i], ss[j]
@@ -161,7 +161,7 @@ def assess_GT_overlaps(gmm):
         
 def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test", plot=False, v=False):
 
-    print "%s %d %d"%(contig, s, e)
+    print("%s %d %d"%(contig, s, e))
     stdout.flush()
 
     if include_indivs!=None and len(include_indivs) == 1:
@@ -171,9 +171,9 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
     gX = g.GMM_genotype(X, include_indivs = include_indivs)
     u_o, med_o, overlaps = assess_GT_overlaps(gX.gmm)
     if gX.fail_filter(filt):
-        print "***********FAILED************"
+        print("***********FAILED************")
     if gX.n_clusts ==1:  
-        print "***********1_CLUST************"
+        print("***********1_CLUST************")
     
     mus = np.mean(X,1)
 
@@ -181,7 +181,7 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
         gXs = g.GMM_genotype(Xs)
         if gXs.n_clusts == 1:
-            print "***********1_SD_CLUST************"
+            print("***********1_SD_CLUST************")
             return
             
     if gX.n_clusts == 1 or gX.fail_filter(filt):
@@ -192,7 +192,7 @@ def output(g, contig, s, e, filt, include_indivs=None, plot_dir="./plotting/test
     
      
     if plot:
-        print "plotting %s %d %d"%(contig, s, e)
+        print("plotting %s %d %d"%(contig, s, e))
         Xs, s_idx_s, s_idx_e = g.get_sunk_gt_matrix(contig, s, e)
         gXs = g.GMM_genotype(Xs, include_indivs = include_indivs)
         g.plot(gX, gXs, contig, s, e, idx_s, idx_e, s_idx_s, s_idx_e, overlaps, fn="%s/%s_%d_%d.png"%(plot_dir, contig, s, e))
@@ -205,7 +205,7 @@ def assess_GT_overlaps(gmm):
     us = []
     ss = []
     ws = []
-    for i in xrange(l):
+    for i in range(l):
         u = gmm.means[i,0]
         #s = gmm.covars[i][0][0]**.5
         s = gmm.covars[i]**.5
@@ -217,7 +217,7 @@ def assess_GT_overlaps(gmm):
     
     sort_mu_args = np.argsort(np.array(us))
     all_os = []
-    for k in xrange(len(sort_mu_args)-1):
+    for k in range(len(sort_mu_args)-1):
         i, j = sort_mu_args[k], sort_mu_args[k+1] 
         u_1, u_2 = us[i], us[j]
         s1, s2 = ss[i], ss[j]
@@ -277,7 +277,7 @@ class simple_genotyper(object):
         #print "done %fs"%(time.time()-t)
         params, bics, gmms, all_labels = [], [], [], []
         
-        print "assessing genotypes" 
+        print("assessing genotypes") 
         t = time.time()
 
         prev_grps = np.array([])
@@ -297,7 +297,7 @@ class simple_genotyper(object):
             all_labels.append(labels)
             prev_grps = grps 
             
-        print "done %fs"%(time.time()-t)
+        print("done %fs"%(time.time()-t))
         idx = np.argmin(bics)
         #print params
         #print np.where(np.array(params)==3)
@@ -483,9 +483,9 @@ class simple_GMM_gt(object):
         fig.set_figwidth(9)
         fig.set_figheight(4)
         axescolor  = '#f6f6f6'
-        print ax_arr 
-        print self.bics
-        print self.params
+        print(ax_arr) 
+        print(self.bics)
+        print(self.params)
 
         ax_arr[1].plot(self.params, self.bics)
 
@@ -495,7 +495,7 @@ class simple_GMM_gt(object):
         G_x=np.arange(0,max(cps)+1,.1)
         l = self.gmm.means.shape[0]
         
-        for i in xrange(l):
+        for i in range(l):
             c = cm.hsv(float(i)/l,1)
             mu = self.gmm.means[i,0]
             #var = self.gmm.covars[i][0][0]
@@ -614,7 +614,7 @@ class simple_GMM_gt(object):
         
         singleton_id = "None"
         if is_singleton:
-            indiv_by_gt = {v:k for k, v in gts_by_indiv.iteritems()}
+            indiv_by_gt = {v:k for k, v in gts_by_indiv.items()}
             gt = labels_to_gt[min_AC_label]
             indiv = indiv_by_gt[gt]
             singleton_id = indiv
@@ -622,7 +622,7 @@ class simple_GMM_gt(object):
         else:
             singleton_cp_z, singleton_logR_z = -1,-1
         
-        all_gts = set(np.unique(np.array(labels_to_gt.values())))
+        all_gts = set(np.unique(np.array(list(labels_to_gt.values()))))
         
         is_biallelic_del = False
         is_biallelic_dup = False
@@ -712,7 +712,7 @@ class simple_GMM_gt(object):
         sorted_labels = self.labels[args]
 
         min_d = 9e9
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             d = np.absolute(sorted_mus[i+1]-sorted_mus[i])
             if sorted_labels[i]!=sorted_labels[i+1] and d<min_d:
                 min_d = d
@@ -752,7 +752,7 @@ class simple_GMM_gt(object):
         t = 0 
         p = 0
         
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             mu_0 = sorted_mus[i]
             l_0 = self.mu_to_labels[mu_0]
             
@@ -781,7 +781,7 @@ class simple_GMM_gt(object):
         std_lefts = []
         std_rights = []
 
-        for i in xrange(sorted_mus.shape[0]-1):
+        for i in range(sorted_mus.shape[0]-1):
             mu_left = sorted_mus[i]
             mu_right = sorted_mus[i+1]
             
@@ -816,7 +816,7 @@ class simple_GMM_gt(object):
         gt_lls_by_indiv = {}
 
         for i, indiv in enumerate(self.indivs):  
-            lls = {gt:max(np.log(self.posterior_probs[i,label])/np.log(10),-1000) for label, gt in labels_to_gt.iteritems() }
+            lls = {gt:max(np.log(self.posterior_probs[i,label])/np.log(10),-1000) for label, gt in labels_to_gt.items() }
             gt_lls_by_indiv[indiv] = lls 
 
         return gt_lls_by_indiv
@@ -872,9 +872,9 @@ class simple_GMM_gt(object):
         
         ## ensure no -1s
         while min(labels_to_gt.values())<0:
-            print "<0's detected..."
+            print("<0's detected...")
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+1
             labels_to_gt = new_labels_to_gt
        
@@ -886,16 +886,16 @@ class simple_GMM_gt(object):
             else:
                 d=-1
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+d
             labels_to_gt = new_labels_to_gt
         
         gts = [int(labels_to_gt[self.labels[i]]) for i in range(self.X.shape[0])]
         
-        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.iteritems()}
+        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.items()}
         labels_to_gt = new_labels_to_gt
 
-        gt_to_labels = {v:k for k,v in labels_to_gt.iteritems()} 
+        gt_to_labels = {v:k for k,v in labels_to_gt.items()} 
 
         return gts, gt_to_labels, labels_to_gt
 
@@ -930,9 +930,9 @@ class simple_GMM_gt(object):
         
         ## ensure no -1s
         while min(labels_to_gt.values())<0:
-            print "<0's detected..."
+            print("<0's detected...")
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+1
             labels_to_gt = new_labels_to_gt
        
@@ -944,7 +944,7 @@ class simple_GMM_gt(object):
             else:
                 d=-1
             new_labels_to_gt = {}
-            for l, gt in labels_to_gt.iteritems():
+            for l, gt in labels_to_gt.items():
                 new_labels_to_gt[l] = gt+d
             labels_to_gt = new_labels_to_gt
         
@@ -952,10 +952,10 @@ class simple_GMM_gt(object):
         for i, indiv in enumerate(self.indivs):  
             gts_by_indiv[indiv] = int(labels_to_gt[self.labels[i]]) 
         
-        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.iteritems()}
+        new_labels_to_gt = {k:int(v) for k,v in labels_to_gt.items()}
         labels_to_gt = new_labels_to_gt
 
-        gt_to_labels = {v:k for k,v in labels_to_gt.iteritems()} 
+        gt_to_labels = {v:k for k,v in labels_to_gt.items()} 
 
         return gts_by_indiv, gt_to_labels, labels_to_gt
             

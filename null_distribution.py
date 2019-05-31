@@ -79,7 +79,7 @@ class null_distribution:
         gc_array = np.copy(gc_array) 
         
         for mask in to_mask:
-            for i in xrange(np.shape(mask)[0]):
+            for i in range(np.shape(mask)[0]):
                 gc_array[mask[i,0]:mask[i,1]] = -999.99
         
         where= gc_array!=-999.99
@@ -90,7 +90,7 @@ class null_distribution:
         cp_array = np.copy(cp_array) 
         
         for mask in to_mask:
-            for i in xrange(np.shape(mask)[0]):
+            for i in range(np.shape(mask)[0]):
                 cp_array[mask[i,0]:mask[i,1]] = -999.99
         
         where= cp_array!=-999.99
@@ -157,19 +157,19 @@ class null_distribution:
         var_vect = (self.var_left+np.roll(self.var_right,-width))/2.0
         var_vect = var_vect[width:]
         #density,edges = np.histogram(delta, bin_edges, density=True)
-        print bin_edges
-        print self.variance_bins
-        print delta.shape
-        print var_vect.shape
+        print(bin_edges)
+        print(self.variance_bins)
+        print(delta.shape)
+        print(var_vect.shape)
         histogram, edges_mu, edges_var = np.histogram2d(delta, var_vect, bins=[bin_edges, self.variance_bins])
-        print histogram.shape
-        print np.sum(histogram,0) 
+        print(histogram.shape)
+        print(np.sum(histogram,0)) 
         density=histogram/np.sum(histogram,0) 
-        print np.var(density,0)
-        print density.sum(0)
+        print(np.var(density,0))
+        print(density.sum(0))
         plot2d(density,edges_mu,edges_var)
         #raw_input()
-        print width
+        print(width)
         exit(1)
 
         density  = np.cumsum(density*np.diff(edges))
@@ -230,7 +230,7 @@ class null_distribution:
         bins = []
         curr_dec = 0
 
-        for i in xrange(dec):
+        for i in range(dec):
             bins.append(sorted_variance[curr_dec])
             curr_dec+=n_dec
 
@@ -238,7 +238,7 @@ class null_distribution:
         histogram, edges = np.histogram(self.variance_vect, bins)
         self.variance_bins = edges
 
-        print 'variance decile edges:', edges
+        print('variance decile edges:', edges)
 
     def init_all_dists(self):
         
@@ -330,30 +330,30 @@ class null_distribution:
 
     def explore_mu_based_p_values(self):
         F = open('./distributions/calibrate.txt','w')
-        print >>F, "width\tp\tmu"
+        print("width\tp\tmu", file=F)
         
-        for width in xrange(1,100):
+        for width in range(1,100):
             if not width in self.mu_probDensByWidth:
                 self.setup_mu_dist(width)
             
             cum_density, density, edges = self.mu_probDensByWidth[width]
             #plot_density(density, edges, "./distributions/%d.pdf"%width)
-            for i in xrange(5,100,5):
+            for i in range(5,100,5):
                 v=i/100.0
                 p=self.get_mu_based_p_value_simple(v, width)
-                print>>F, "%d\t%f\t%f"%(width, p, v)
+                print("%d\t%f\t%f"%(width, p, v), file=F)
     
     
     def explore_t_test_p_values(self):
         F = open('./distributions/calibrate.txt','w')
-        print >>F, "width\tp\tmu"
+        print("width\tp\tmu", file=F)
         
-        for width in xrange(1,100,10):
+        for width in range(1,100,10):
             
-            for i in xrange(5,100,5):
+            for i in range(5,100,5):
                 v=i/100.0
                 p=self.get_t_test_p_value(v)
-                print>>F, "%d\t%f\t%f"%(width, p, v)
+                print("%d\t%f\t%f"%(width, p, v), file=F)
     
     def get_rank_sum_p_value(self,call):
         z,p = stats.ranksums(call.values,self.all_cps)
